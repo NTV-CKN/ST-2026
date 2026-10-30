@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="26fbf7b7-a3fb-4926-8b3a-ee7ab6a5d277" name="Changes" comment="" />
+    <list default="true" id="26fbf7b7-a3fb-4926-8b3a-ee7ab6a5d277" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/members/Group06_23130333_NguyenTrongTin/Group06_23130333_NguyenTrongTin.xlsx" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,7 +16,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="test_admin_user" />
+        <entry key="$PROJECT_DIR$" value="dev" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -47,6 +50,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "database.data.extractors.current.export.id": "Comma-separated (CSV)_id",
     "database.data.extractors.current.id": "Comma-separated (CSV)_id",
+    "git-widget-placeholder": "23130333__NguyenTrongTin",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/nam_4/Kiểm thử/test_pkcn_v2/members/Group06_23130333_NguyenTrongTin",
     "node.js.detected.package.eslint": "true",
@@ -82,6 +86,9 @@
       <workItem from="1792726799844" duration="18000" />
       <workItem from="1792769212911" duration="692000" />
       <workItem from="1792769941342" duration="129000" />
+      <workItem from="1792770081667" duration="1639000" />
+      <workItem from="1792804383581" duration="12000" />
+      <workItem from="1793333612224" duration="1033000" />
     </task>
     <servers />
   </component>
