@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Env & secrets
+.env
+.env.*
+*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Build
+dist/
+build/
+coverage/
+
+/phu_kien_cong_nghe/
