@@ -2,16 +2,34 @@ import { test, expect, Page } from '@playwright/test';
 
 const SAMPLE_IMG = 'assets/images/sp-1.png';
 
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const ADMIN_EMAIL = requiredEnv('ADMIN_EMAIL');
+const ADMIN_PASSWORD = requiredEnv('ADMIN_PASSWORD');
+const BASE_URL = requiredEnv('BASE_URL');
+
+function appUrl(path: string): string {
+  const base = new URL(BASE_URL);
+  base.pathname = `${base.pathname.replace(/\/+$/, '')}/`;
+  return new URL(path.replace(/^\/+/, ''), base).toString();
+}
+
 /**
  * Hàm hỗ trợ đăng nhập Admin và mở trang Quản lý sản phẩm cho mỗi Test Case
  */
 async function loginAndGoToProductManager(page: Page) {
-  await page.goto('/');
+  await page.goto(appUrl('/'));
   
   // 1. Đăng nhập
   await page.locator('.stateUserLogin, p:has-text("Đăng nhập")').first().click();
-  await page.locator('input[placeholder*="Tên đăng nhập"], input[name="username"], input[name="email"]').fill('admin@gmail.com');
-  await page.locator('input[type="password"]').fill('vudeptrai2k5'); // Nhập mật khẩu admin
+  await page.locator('input[placeholder*="Tên đăng nhập"], input[name="username"], input[name="email"]').fill(ADMIN_EMAIL);
+  await page.locator('input[type="password"]').fill(ADMIN_PASSWORD);
   await page.locator('input[type="password"]').press('Enter');
   await page.waitForLoadState('networkidle');
 
@@ -20,9 +38,10 @@ async function loginAndGoToProductManager(page: Page) {
   if (await pmLink.isVisible()) {
     await pmLink.click();
   } else {
-    await page.goto('/product-manager');
+    await page.goto(appUrl('/product-manager'));
   }
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
+  await page.locator('.main-content-admin table').waitFor({ state: 'visible' });
 }
 
 type ProductDetails = {
@@ -32,7 +51,7 @@ type ProductDetails = {
 };
 
 async function openAddProduct(page: Page) {
-  await page.locator('.edit-product-add-prod').click();
+  await page.locator('.head-edit .edit-product-add-prod').click();
   await expect(page.locator('#popup-add-product')).toBeVisible();
 }
 
@@ -187,7 +206,7 @@ test.describe('Suite Quản Lý Sản Phẩm Admin (Auto Browser Isolation)', ()
 
   test('PROD_MGT_Delete-2: Xóa sản phẩm ID 190 và kiểm tra dữ liệu snapshot đơn hàng #28', async ({ page }) => {
     // 1. Kiểm tra Lịch sử đơn hàng trước khi xóa
-    await page.goto('/order-history');
+    await page.goto(appUrl('/order-history'));
     const orderSnapshot = page.locator('.wrap-content-order[data-id="28"]');
     await expect(orderSnapshot).toBeVisible();
     await expect(orderSnapshot).toContainText('Mã đơn hàng:');
@@ -199,7 +218,7 @@ test.describe('Suite Quản Lý Sản Phẩm Admin (Auto Browser Isolation)', ()
     await expect(orderSnapshot).toContainText('Tổng số tiền: đ250,000');
 
     // 2. Vào Admin xóa sản phẩm ID 190
-    await page.goto('/product-manager');
+    await page.goto(appUrl('/product-manager'));
     await page.locator('input[name="keySearch"]').fill('190');
     await page.locator('button:has-text("Tìm kiếm")').click();
 
@@ -220,7 +239,7 @@ test.describe('Suite Quản Lý Sản Phẩm Admin (Auto Browser Isolation)', ()
     await expect(page.locator('body')).toContainText('Không có sản phẩm nào');
 
     // 3. Kiểm tra lại Lịch sử đơn hàng (snapshot vẫn còn nguyên)
-    await page.goto('/order-history');
+    await page.goto(appUrl('/order-history'));
     await expect(orderSnapshot).toBeVisible();
     await expect(orderSnapshot).toContainText('Bộ đổi nguồn 220V sang 12V tẩu Ô tô');
     await expect(orderSnapshot).toContainText('Phân loại: Đen | Màu: Đen');
@@ -373,7 +392,7 @@ test.describe('Suite Quản Lý Sản Phẩm Admin (Auto Browser Isolation)', ()
   test('PROD_MGT_Status-1: Chuyển trạng thái Inactive -> Ẩn khỏi Client -> Khôi phục Active', async ({ page }) => {
     const productName = 'Bàn phím máy tính mini có dây SIDOTECH XKB02';
     const findStatusCheckbox = async () => {
-      await page.goto('/product-manager');
+      await page.goto(appUrl('/product-manager'));
       await page.locator('input[name="keySearch"]').fill('100');
       await page.locator('button:has-text("Tìm kiếm")').click();
       const targetRow = page.locator('tbody tr').filter({
@@ -400,7 +419,7 @@ test.describe('Suite Quản Lý Sản Phẩm Admin (Auto Browser Isolation)', ()
       await expect(page.locator('tbody tr').filter({ hasText: productName })).toBeVisible();
 
       // 2. Sang Client search từ khóa -> Verify bị ẩn
-      await page.goto('/');
+      await page.goto(appUrl('/'));
       await page.locator('.search-input').fill(productName);
       await page.locator('.search-button').click();
       await expect(page.locator('body')).toContainText('Không tìm thấy sản phẩm nào');
