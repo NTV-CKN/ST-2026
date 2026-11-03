@@ -1,0 +1,119 @@
+[WISHLIST_Add-1]	Kiểm tra vị trí và giao diện nút Thêm vào Wishlist	"Tiền điều kiện: Đã mở trang Chi tiết sản phẩm (/product-detail?id=101)
+Các bước:
+1. Quan sát khu vực nút bấm bên dưới nút ""THÊM VÀO GIỎ HÀNG"""	"1. Hiển thị nút ""LƯU VÀO WISHLIST"".
+2. Hiển thị dòng chú thích bên dưới: Sản phẩm được lưu theo sản phẩm chung; bạn chọn biến thể khi thêm vào giỏ."		Untested	10/21/2026	
+[WISHLIST_Add-2]	Kiểm tra Guest bấm Thêm vào Wishlist bị chuyển hướng sang Đăng nhập	"Tiền điều kiện: Chưa đăng nhập tài khoản (Guest)
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST]"	"1. Hệ thống lưu afterLoginPath = /product-detail?id=101 vào Session.
+2. Chuyển hướng lập tức sang trang /login."	Chưa đăng nhập	Untested	10/22/2026	
+[WISHLIST_Add-3]	Kiểm tra điều hướng quay lại trang sản phẩm sau khi Guest đăng nhập	"Tiền điều kiện: Đã bị chuyển hướng sang /login từ bước lưu Wishlist
+Các bước:
+1. Nhập Username/Password hợp lệ
+2. Click nút [Đăng nhập]"	"1. Đăng nhập thành công.
+2. Hệ thống tự động chuyển hướng người dùng quay trở lại đúng URL /product-detail?id=101."	[WISHLIST_Add-2]	Untested	10/23/2026	
+[WISHLIST_Add-4]	Kiểm tra User đã đăng nhập thêm sản phẩm vào Wishlist thành công	"Tiền điều kiện: Đã đăng nhập tài khoản User (user_id = 5)
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST]"	"1. CSDL thêm 1 bản ghi vào bảng wishlists với user_id = 5 và product_id = 101.
+2. Redirect về /product-detail?id=101&wishlist=added kèm thông báo: Đã lưu sản phẩm này vào wishlist. và link Xem wishlist."	Đăng nhập User	Untested	10/24/2026	
+[WISHLIST_Add-5]	Kiểm tra bấm lưu sản phẩm ĐÃ TỒN TẠI trong Wishlist (Idempotent)	"Tiền điều kiện: Sản phẩm ID 101 đã có sẵn trong Wishlist của user
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST] lần nữa"	"1. CSDL thực thi ON DUPLICATE KEY UPDATE id = id (không tạo dòng mới, không văng lỗi trùng index).
+2. Redirect về /product-detail?id=101&wishlist=added hiển thị thông báo thành công."	[WISHLIST_Add-4]	Untested	10/25/2026	
+[WISHLIST_Add-6]	Kiểm tra thêm sản phẩm bị Admin ẩn (status != 1) vào Wishlist	"Tiền điều kiện: Sản phẩm ID 102 bị ẩn (status = 0)
+Các bước:
+1. Gửi request POST /wishlist với action=add&productId=102"	"1. Hệ thống chặn không lưu vào CSDL.
+2. Redirect về /product-detail?id=102&wishlist=unavailable kèm thông báo: Sản phẩm hiện không khả dụng để lưu vào wishlist."	Đăng nhập User	Untested	10/26/2026	
+[WISHLIST_View-1]	Kiểm tra truy cập trực tiếp URL /wishlist dưới quyền Guest	"Tiền điều kiện: Chưa đăng nhập (Guest)
+Các bước:
+1. Truy cập trực tiếp đường dẫn http://.../wishlist"	"1. Mở trang wishlist.jsp thành công (wishlistGuest = true).
+2. Hiển thị banner: Bạn có thể xem trang này khi chưa đăng nhập. Hãy đăng nhập để lưu sản phẩm vào wishlist gắn với tài khoản của bạn. và nút Đăng nhập (/login?continue=wishlist)."	Chưa đăng nhập	Untested	10/27/2026	
+[WISHLIST_View-2]	Kiểm tra hiển thị trang Wishlist trống của Guest	"Tiền điều kiện: Chưa đăng nhập (Guest)
+Các bước:
+1. Quan sát vùng nội dung chính của trang /wishlist"	"1. Hiển thị tiêu đề H2: Đăng nhập để xem wishlist của bạn.
+2. Hiển thị mô tả: Sau khi đăng nhập, các sản phẩm yêu thích sẽ được lưu theo tài khoản."	[WISHLIST_View-1]	Untested	10/28/2026	<DefectID-1>
+[WISHLIST_View-3]	Kiểm tra hiển thị trang Wishlist trống của User đã đăng nhập	"Tiền điều kiện: Đã đăng nhập, chưa có sản phẩm nào trong Wishlist
+Các bước:
+1. Truy cập đường dẫn /wishlist"	"1. Hiển thị tiêu đề H2: Wishlist của bạn đang trống.
+2. Hiển thị mô tả: Thêm sản phẩm yêu thích từ trang chi tiết để lưu lại tại đây. và nút Khám phá sản phẩm."	Đăng nhập User	Untested	10/29/2026	
+[WISHLIST_View-4]	Kiểm tra thông tin hiển thị trên Card sản phẩm trong Wishlist	"Tiền điều kiện: Wishlist đang có sản phẩm ID 101
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm ID 101"	"1. Hiển thị Ảnh đại diện chính (hoặc placeholder icon nếu không có ảnh).
+2. Hiển thị Tên sản phẩm (link về trang chi tiết), Giá Từ [min_price]₫.
+3. Hiển thị Dropdown biến thể còn hàng, ô nhập số lượng (mặc định 1), nút [Thêm vào giỏ] và nút Xóa (thùng rác)."	[WISHLIST_Add-4]	Untested	10/31/2026	
+[WISHLIST_View-5]	Kiểm tra định dạng thông tin biến thể trong Dropdown <select>	"Tiền điều kiện: Sản phẩm có các biến thể còn hàng (stock > 0)
+Các bước:
+1. Click mở Dropdown chọn biến thể trên Card sản phẩm"	1. Các Option hiển thị chuẩn định dạng: {Tên biến thể} · {Mã SKU} · {Giá}₫ (còn {Số lượng}). Ví dụ: Màu Đen - Size M · SKU-RED-M · 250,000₫ (còn 15).	[WISHLIST_View-4]	Untested	11/3/2026	
+[WISHLIST_View-6]	Kiểm tra biểu tượng Wishlist trên Header	"Tiền điều kiện: Mở trang web bất kỳ
+Các bước:
+1. Quan sát cụm biểu tượng góc trên Header"	"1. Hiển thị icon Wishlist trỏ đến đường dẫn /wishlist.
+2. Icon KHÔNG hiển thị Badge đếm số lượng tự động."		Untested	11/4/2026	
+[WISHLIST_View-7]	Kiểm tra hiển thị sản phẩm Active nhưng tất cả biến thể HẾT HÀNG	"Tiền điều kiện: Sản phẩm status = 1 nhưng tất cả biến thể stock = 0
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm này"	"1. Hệ thống ẩn Form chọn biến thể và nút ""Thêm vào giỏ"".
+2. Hiển thị dòng chữ: Hiện chưa có biến thể còn hàng. và nút Xem sản phẩm."	Đăng nhập User	Passed	11/5/2026	
+[WISHLIST_View-8]	Kiểm tra hiển thị sản phẩm bị Admin ẨN (status != 1)	"Tiền điều kiện: Sản phẩm trong Wishlist bị Admin chuyển trạng thái Inactive
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm bị ẩn"	"1. Hệ thống ẩn Form chọn biến thể và ẩn luôn nút ""Xem sản phẩm"".
+2. Hiển thị thông báo: Sản phẩm hiện không còn khả dụng."	Đăng nhập User	Untested	11/6/2026	
+[WISHLIST_Remove-1]	Kiểm tra xóa 1 sản phẩm khỏi Wishlist	"Tiền điều kiện: Card sản phẩm có chứa nút xóa thùng rác (wishlistId = 12)
+Các bước:
+1. Click biểu tượng thùng rác trên Card sản phẩm"	"1. Form gửi request POST /wishlist với action=remove&wishlistId=12.
+2. Bản ghi bị xóa khỏi CSDL, trang reload về /wishlist?success=removed kèm thông báo: Đã xóa sản phẩm khỏi wishlist."	[WISHLIST_View-4]	Untested	11/7/2026	
+[WISHLIST_Move-1]	Kiểm tra Chuyển sản phẩm sang Giỏ hàng với số lượng hợp lệ	"Tiền điều kiện: Biến thể selected có stock = 10
+Các bước:
+1. Chọn Biến thể A, nhập Số lượng = 2
+2. Click nút [Thêm vào giỏ]"	"1. Form gửi POST /wishlist (action=move&productId=3&variantId=5&quantity=2).
+2. Biến thể được thêm vào Session Cart.
+3. Redirect về /wishlist?success=added-to-cart hiển thị thông báo: Đã thêm sản phẩm vào giỏ hàng. Sản phẩm vẫn được giữ trong wishlist."	[WISHLIST_View-4]	Untested	11/8/2026	
+[WISHLIST_Move-2]	Kiểm tra sản phẩm GIỮ NGUYÊN trong Wishlist sau khi Thêm vào giỏ	"Tiền điều kiện: Vừa thực hiện thành công bước [WISHLIST_Move-1]
+Các bước:
+1. Quan sát danh sách sản phẩm trên trang /wishlist"	1. Sản phẩm ID 101 vẫn hiển thị nguyên vẹn trong Wishlist (không bị tự động xóa).	[WISHLIST_Move-1]	Untested	11/10/2026	
+[WISHLIST_Move-3]	Kiểm tra nhập số lượng vượt quá 100 khi Thêm vào giỏ	"Tiền điều kiện: Đang ở Card sản phẩm trong Wishlist
+Các bước:
+1. Ô nhập số lượng gõ giá trị 101
+2. Click nút [Thêm vào giỏ]"	"1. Hệ thống chặn xử lý (quantity > 100 ném IllegalArgumentException).
+2. Redirect về /wishlist?error=invalid kèm thông báo: Thông tin gửi lên không hợp lệ. Vui lòng thử lại."	[WISHLIST_View-4]	Untested	11/11/2026	
+[WISHLIST_Move-4]	Kiểm tra nhập số lượng <= 0 khi Thêm vào giỏ	"Tiền điều kiện: Đang ở Card sản phẩm trong Wishlist
+Các bước:
+1. Ô nhập số lượng gõ giá trị 0 (hoặc -1)
+2. Click nút [Thêm vào giỏ]"	"1. Hệ thống chặn xử lý.
+2. Redirect về /wishlist?error=invalid hiển thị thông báo lỗi."	[WISHLIST_View-4]	Untested	11/12/2026	
+[WISHLIST_DB-1]	Kiểm tra Ràng buộc duy nhất uq_wishlist_user_product trong CSDL	"Tiền điều kiện: Đã có bản ghi user_id = 5, product_id = 101
+Các bước:
+1. Chạy lệnh SQL INSERT INTO wishlists (user_id, product_id) VALUES (5, 101);"	1. CSDL báo lỗi vi phạm khóa duy nhất Duplicate entry '5-101' for key 'uq_wishlist_user_product'.		Untested	11/14/2026	
+[WISHLIST_DB-2]	Kiểm tra Tự động xóa CASCADE Wishlist khi Xóa tài khoản User	"Tiền điều kiện: User ID 5 đang có 3 sản phẩm trong Wishlist
+Các bước:
+1. Thực hiện xóa User ID 5 khỏi bảng users"	"1. Khóa ngoại fk_wishlists_users kích hoạt ON DELETE CASCADE.
+2. Toàn bộ 3 bản ghi wishlist của User ID 5 tự động bị xóa sạch khỏi bảng wishlists."		Untested	11/15/2026	
+[WISHLIST_DB-3]	Kiểm tra Tự động xóa CASCADE Wishlist khi Xóa Sản phẩm	"Tiền điều kiện: Sản phẩm ID 101 đang nằm trong Wishlist của 10 người dùng
+Các bước:
+1. Thực hiện xóa Sản phẩm ID 101 khỏi bảng products"	"1. Khóa ngoại fk_wishlists_products kích hoạt ON DELETE CASCADE.
+2. Tất cả 10 bản ghi liên quan đến product_id = 101 trong bảng wishlists tự động bị xóa hoàn toàn."		Untested	11/16/2026	
+
+
+HƯỚNG DẪN CHẠY (viết bằng Playwright)
+- Trước khi chạy: import phu_kien_cong_nghe_test.sql (DB gốc + dữ liệu seed). Không import lại giữa chừng.
+- Dùng 1 file spec, bật test.describe.configure({ mode: 'serial' }), chạy đúng thứ tự dưới đây. Test case phụ thuộc [ID] chỉ chạy khi tiền đề Passed, nếu không thì ghi Blocked.
+- Test case DB-1/2/3 và các kiểm tra "CSDL ghi bản ghi" dùng thư viện mysql2 truy vấn trực tiếp DB.
+- Tài khoản: user 5 = wl_user5@test.local (chính), user 6 = wl_user6 (View-7), user 7 = wl_user7 (View-8), user 33 = user@gmail.com (View-3, wishlist trống). Mật khẩu của user 5..13 giống user@gmail.com, hỏi người dùng.
+
+THỨ TỰ:
+1) Context khách (chưa đăng nhập): Add-1, View-1, View-2, View-6.
+2) Vẫn context đó, chạy liền nhau: Add-2 (khách bấm LƯU VÀO WISHLIST ở sản phẩm 101, bị chuyển sang /login), rồi Add-3 (đăng nhập bằng user 5, phải quay lại /product-detail?id=101).
+3) Đã đăng nhập user 5: Add-4, Add-5, Add-6 (page.request.post /wishlist action=add&productId=102), View-4, View-5, Remove-1 (wishlistId=12), Move-1 (sản phẩm 3, chọn biến thể ID 5, số lượng 2), Move-2, Move-3, Move-4.
+4) Mỗi test dưới đây dùng context mới: View-3 (user 33), View-7 (wl_user6), View-8 (wl_user7).
+5) CUỐI CÙNG, thuần SQL, đúng thứ tự: DB-1, DB-2, DB-3.
+
+LÝ DO THỨ TỰ: Add-4 ghi (5,101) cho Add-5, View-4, DB-1. Remove-1 chạy trước DB-2 để user 5 còn đúng 3 sản phẩm (101, 3, 104). DB-2 xóa user 5 trước DB-3 để còn đúng 10 bản ghi chứa sản phẩm 101. DB-3 xóa sản phẩm 101 thật nên chạy cuối.
+
+LƯU Ý KHI VIẾT PLAYWRIGHT
+- Move-3 (số lượng 101) và Move-4 (0 hoặc -1): nếu thuộc tính min/max của input chặn submit ở trình duyệt, đặt form.noValidate = true bằng page.evaluate rồi submit để kiểm tra phía server. Ghi việc này vào Note.
+- Move-2: kiểm tra đúng như văn bản (sản phẩm 101 còn trong wishlist), ghi thêm là sản phẩm 3 cũng còn.
+- Dữ liệu seed đã đổi: sản phẩm 102 bị ẩn, biến thể 5 có stock = 10. Không sửa dữ liệu để ép test Passed.
+- Cột Result/Note có sẵn (Passed, <DefectID-1>) là dữ liệu cũ, chạy lại rồi mới ghi kết quả. Không sửa nội dung test case.
