@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/Playwright/phu_kien_cong_nghe/src/main/resources/phu_kien_cong_nghe.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/Playwright/phu_kien_cong_nghe/src/main/resources/phu_kien_cong_nghe_backup.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/Playwright/phu_kien_cong_nghe/target/pkcn-1.0-SNAPSHOT/WEB-INF/classes/phu_kien_cong_nghe.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/Playwright/phu_kien_cong_nghe/target/pkcn-1.0-SNAPSHOT/WEB-INF/classes/phu_kien_cong_nghe_backup.sql" dialect="GenericSQL" />
-  </component>
-</project>
