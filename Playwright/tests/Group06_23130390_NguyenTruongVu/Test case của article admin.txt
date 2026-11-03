@@ -1,0 +1,128 @@
+[ARTICLE_MGT_List-1]	Hiển thị danh sách bài viết dạng card	"Tiền điều kiện: Quyền Admin (`role = 1`)
+
+Các bước:
+ 1. Truy cập đường dẫn `/admin/articles`
+ 2. Quan sát danh sách bài báo"	"1. Chuyển hướng đến trang Quản lý bài viết thành công.
+2. Hiển thị danh sách dạng Card gồm: Tiêu đề, Mô tả ngắn, Mã #ID, Tên tác giả, Ngày đăng, nút [Chỉnh sửa] và nút [Xóa]."	Đăng nhập Admin (role = 1)	Untested	10/21/2026	
+[ARTICLE_MGT_List-2]	Kiểm tra sắp xếp mặc định bài viết mới nhất lên đầu	"Tiền điều kiện: Đã có nhiều bài viết trong CSDL
+Các bước:
+1. Tải lại trang /admin/articles
+2. Quan sát thứ tự hiển thị"	"1. Tải dữ liệu thành công.
+2. Các bài viết được sắp xếp giảm dần theo ngày đăng (ORDER BY post_date DESC)."	[ARTICLE_MGT_List-1]	Untested	10/22/2026	
+[ARTICLE_MGT_List-3]	Kiểm tra tìm kiếm bài báo tương đối theo Tên/Nội dung/Tác giả	"Tiền điều kiện: Đã có bài viết chứa từ ""Công nghệ""
+Các bước:
+1. Nhập Công nghệ vào ô tìm kiếm (q)
+2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa ""Công nghệ"".
+2. Danh sách lọc và hiển thị các bài viết khớp từ khóa theo điều kiện LIKE %...%."	[ARTICLE_MGT_List-1]	Untested	10/23/2026	
+[ARTICLE_MGT_List-4]	Kiểm tra tìm kiếm bài báo với từ khóa không tồn tại	"Tiền điều kiện: Không có bài viết nào chứa chuỗi ""XYZ999""
+Các bước:
+1. Nhập XYZ999 vào ô tìm kiếm
+2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa.
+2. Hiển thị thông báo: Không tìm thấy bài viết phù hợp với ""XYZ999""."	[ARTICLE_MGT_List-1]	Untested	10/24/2026	
+[ARTICLE_MGT_Add-1]	Kiểm tra để trống một trong các trường bắt buộc khi thêm mới bài báo	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Để trống ô Tiêu đề (hoặc Mô tả ngắn, Nội dung)
+2. Click nút [Đăng bài viết]"	"1. Dữ liệu trường bị trống.
+2. Hệ thống chặn tạo bài và hiển thị thông báo flash error: Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung bài viết."	[ARTICLE_MGT_List-1]	Untested	10/25/2026	
+[ARTICLE_MGT_Add-2]	Kiểm tra giới hạn độ dài Tiêu đề bài viết vượt quá 191 ký tự	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Nhập Tiêu đề chuỗi 192 ký tự
+2. Nhập Mô tả ngắn, Nội dung hợp lệ
+3. Click nút [Đăng bài viết]"	"1. Ô tiêu đề hiển thị chuỗi 192 ký tự.
+2. Hệ thống báo lỗi: Tiêu đề không được vượt quá 191 ký tự."	[ARTICLE_MGT_List-1]	Untested	10/26/2026	
+[ARTICLE_MGT_Add-3]	Kiểm tra thêm mới bài báo thành công và tự động xuất bản	"Tiền điều kiện: Nhập đầy đủ Tiêu đề, Mô tả ngắn, Nội dung hợp lệ
+Các bước:
+1. Click nút [Đăng bài viết]
+2. Kiểm tra trang tin tức Client /news"	"1. Thêm mới thành công, hiển thị thông báo: Đã tạo bài viết.
+2. Bài viết mới tự động gán author_id của Admin, post_date hiện tại và xuất bản ngay trên trang /news."	[ARTICLE_MGT_List-1]	Untested	10/27/2026	
+[ARTICLE_MGT_Edit-1]	Kiểm tra cập nhật bài báo với dữ liệu hợp lệ	"Tiền điều kiện: Đã mở form [Chỉnh sửa] trên card bài viết
+Các bước:
+1. Nhập Tiêu đề mới, Mô tả ngắn mới, Nội dung mới
+2. Click nút [Lưu thay đổi]"	"1. Mở form chỉnh sửa thành công.
+2. Hệ thống lưu cập nhật và hiển thị thông báo: Đã cập nhật bài viết."	[ARTICLE_MGT_List-1]	Untested	10/28/2026	<DefectID-1>
+[ARTICLE_MGT_Edit-2]	Kiểm tra các trường bị cố định (Mã bài viết, Tác giả, Ngày đăng)	"Tiền điều kiện: Đang mở form Chỉnh sửa bài viết
+Các bước:
+1. Quan sát các ô nhập liệu trên form
+2. Kiểm tra câu lệnh UPDATE trong hệ thống"	"1. Mã bài viết ở dạng hidden, Tác giả và Ngày đăng không xuất hiện trên form sửa.
+2. Giá trị Tác giả và Ngày đăng ban đầu được giữ nguyên không thay đổi."	[ARTICLE_MGT_Edit-1]	Untested	10/29/2026	
+[ARTICLE_MGT_Delete-1]	Kiểm tra hiển thị hộp thoại xác nhận trước khi xóa bài báo	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Click nút [Xóa] trên card bài viết"	"1. Hộp thoại xác nhận window.confirm() xuất hiện.
+2. Nội dung hiển thị đúng câu: Xóa bài viết này? Các bình luận liên quan cũng sẽ bị xóa."	[ARTICLE_MGT_List-1]	Untested	10/31/2026	
+[ARTICLE_MGT_Detail-1]	Kiểm tra hiển thị trang Chi tiết bài báo và đếm bình luận đã duyệt	"Tiền điều kiện: Bài viết ID 10 có 2 bình luận approved và 1 bình luận pending
+Các bước:
+1. Truy cập đường dẫn Client /news-detail?id=10"	"1. Trang chi tiết tải thành công nội dung bài viết.
+2. Số lượng bình luận hiển thị đúng là 2 bình luận (chỉ đếm các bình luận có trạng thái approved)."		Untested	11/3/2026	
+[ARTICLE_MGT_Detail-2]	Kiểm tra tải danh sách bình luận đã duyệt qua AJAX endpoint	"Tiền điều kiện: Đang ở trang Chi tiết bài báo ID 10
+Các bước:
+1. Click nút mở/xem danh sách bình luận"	"1. Gọi AJAX GET /article-comments?articleId=10.
+2. Danh sách 2 bình luận đã duyệt hiển thị đúng tên, ngày gửi và nội dung."	[ARTICLE_MGT_Detail-1]	Untested	11/4/2026	
+[ARTICLE_MGT_Comment-1]	Kiểm tra để trống Nội dung bình luận khi gửi	"Tiền điều kiện: Đang ở form Đăng bình luận bài báo
+Các bước:
+1. Để trống ô Nội dung bình luận
+2. Click nút [Đăng bình luận]"	"1. Ô nội dung ở trạng thái rỗng.
+2. Hệ thống chặn gửi và báo lỗi: Vui lòng nhập nội dung bình luận."	[ARTICLE_MGT_Detail-1]	Passed	11/5/2026	
+[ARTICLE_MGT_Comment-2]	Kiểm tra để trống Tên hiển thị khi chưa đăng nhập	"Tiền điều kiện: Khách truy cập chưa đăng nhập tài khoản
+Các bước:
+1. Nhập Nội dung bình luận, để trống Tên hiển thị
+2. Click nút [Đăng bình luận]"	"1. Ô tên hiển thị bị để trống.
+2. Hệ thống báo lỗi: Vui lòng nhập tên hiển thị."	[ARTICLE_MGT_Detail-1]	Untested	11/6/2026	
+[ARTICLE_MGT_Comment-3]	Kiểm tra Tên hiển thị vượt quá 50 ký tự	"Tiền điều kiện: Khách truy cập chưa đăng nhập
+Các bước:
+1. Nhập Tên hiển thị chuỗi 51 ký tự
+2. Click nút [Đăng bình luận]"	"1. Ô tên hiển thị nhận chuỗi 51 ký tự.
+2. Hệ thống báo lỗi: Tên hiển thị không được vượt quá 50 ký tự."	[ARTICLE_MGT_Detail-1]	Untested	11/7/2026	
+[ARTICLE_MGT_Comment-4]	Kiểm tra để trống trường Email khi chưa đăng nhập	"Tiền điều kiện: Khách truy cập chưa đăng nhập
+Các bước:
+1. Nhập Nội dung, Tên hiển thị, để trống Email
+2. Click nút [Đăng bình luận]"	"1. Ô email bị rỗng.
+2. Hệ thống báo lỗi: Vui lòng nhập email."	[ARTICLE_MGT_Detail-1]	Untested	11/8/2026	
+[ARTICLE_MGT_Comment-5]	Kiểm tra định dạng Email không hợp lệ	"Tiền điều kiện: Đang ở form Đăng bình luận
+Các bước:
+1. Nhập ô Email chuỗi abc@xyz (thiếu tên miền hợp lệ)
+2. Click nút [Đăng bình luận]"	"1. Ô email nhận chuỗi sai định dạng.
+2. Hệ thống báo lỗi: Email không hợp lệ."	[ARTICLE_MGT_Detail-1]	Untested	11/10/2026	
+[ARTICLE_MGT_Comment-6]	Kiểm tra đăng bình luận thành công và lưu trạng thái pending	"Tiền điều kiện: Nhập Nội dung, Tên hiển thị, Email hợp lệ
+Các bước:
+1. Click nút [Đăng bình luận]"	"1. Bình luận được lưu vào CSDL với trạng thái pending.
+2. Hiển thị thông báo thành công: Đã gửi bình luận. Bình luận sẽ hiển thị sau khi được duyệt."	[ARTICLE_MGT_Detail-1]	Untested	11/11/2026	
+[ARTICLE_MGT_AdminComm-1]	Kiểm tra lọc danh sách bình luận theo bài báo trong Admin	"Tiền điều kiện: Quyền Admin, truy cập /admin/article-comment
+Các bước:
+1. Chọn bài báo ""Tin tức A"" từ dropdown lọc
+2. Quan sát bảng bình luận"	"1. Chuyển hướng trang quản lý bình luận thành công.
+2. Bảng hiển thị danh sách tất cả bình luận thuộc duy nhất bài báo ""Tin tức A""."	Đăng nhập Admin (role = 1)	Untested	11/12/2026	
+[ARTICLE_MGT_AdminComm-2]	Kiểm tra duyệt bình luận bài báo sang trạng thái approved	"Tiền điều kiện: Bình luận ID 101 đang ở trạng thái pending
+Các bước:
+1. Click nút [Duyệt] tại bình luận ID 101"	"1. Trạng thái bình luận chuyển sang approved.
+2. Hệ thống báo: Đã duyệt bình luận. Bình luận lập tức xuất hiện công khai trên trang Client."	[ARTICLE_MGT_AdminComm-1]	Untested	11/13/2026	
+[ARTICLE_MGT_AdminComm-3]	Kiểm tra ẩn bình luận bài báo sang trạng thái hidden	"Tiền điều kiện: Bình luận ID 102 đang ở trạng thái approved
+Các bước:
+1. Click nút [Ẩn] tại bình luận ID 102"	"1. Trạng thái bình luận chuyển sang hidden.
+2. Hệ thống báo: Đã ẩn bình luận. Bình luận không còn xuất hiện trên trang Client."	[ARTICLE_MGT_AdminComm-1]	Untested	11/14/2026	
+[ARTICLE_MGT_AdminComm-4]	Kiểm tra xóa bình luận bài báo thành công	"Tiền điều kiện: Đang ở trang Quản lý bình luận Admin
+Các bước:
+1. Click nút [Xóa] tại bình luận ID 103
+2. Click [OK] trên popup xác nhận"	"1. Popup xác nhận xuất hiện.
+2. Bản ghi bình luận ID 103 bị xóa khỏi DB, hệ thống báo: Đã xóa bình luận."	[ARTICLE_MGT_AdminComm-1]	Untested	11/15/2026	
+[ARTICLE_MGT_AdminComm-5]	Kiểm tra xử lý khi thao tác trên bình luận không tồn tại	"Tiền điều kiện: Bình luận ID 999 đã bị xóa trước đó
+Các bước:
+1. Gửi request duyệt/xóa bình luận ID 999"	"1. Request gửi đến server.
+2. Hệ thống báo lỗi: Không tìm thấy bình luận cần cập nhật. (hoặc Không tìm thấy bình luận cần xóa.)"	[ARTICLE_MGT_AdminComm-1]	Untested	11/16/2026		
+
+HƯỚNG DẪN CHẠY (viết bằng Playwright)
+- Trước khi chạy: import phu_kien_cong_nghe_test.sql (DB gốc + dữ liệu seed). Không import lại giữa chừng.
+- Dùng 1 file spec, bật test.describe.configure({ mode: 'serial' }), chạy đúng thứ tự dưới đây. Test case phụ thuộc [ID] chỉ chạy khi tiền đề Passed, nếu không thì ghi Blocked.
+- Các bước "kiểm tra CSDL / câu lệnh UPDATE" dùng thư viện mysql2: đọc author_id và post_date trước và sau khi sửa để chứng minh không đổi.
+- Admin: admin@gmail.com hoặc duy123@gmail.com (role_id = 1). Mật khẩu hỏi người dùng.
+
+THỨ TỰ:
+1) Context Admin (đăng nhập một lần): List-1, List-2, List-3, List-4, Add-1, Add-2, Add-3, Edit-1, Edit-2, Delete-1, AdminComm-1, AdminComm-2, AdminComm-3, AdminComm-4, AdminComm-5.
+2) Context khách (mới, chưa đăng nhập): Detail-1, Detail-2, Comment-1, Comment-2, Comment-3, Comment-4, Comment-5, Comment-6.
+
+LÝ DO THỨ TỰ: Add-3 tạo bài mới, Edit-1/Edit-2 sửa đúng bài vừa tạo (đừng sửa bài ID 10 và 51 vì còn cần). Delete-1 chỉ xem hộp thoại: dùng page.once('dialog', d => d.dismiss()), không xác nhận xóa. AdminComm-2/3/4 chỉ thao tác trên bài "Tin tức A" (bình luận 101, 102, 103) nên không làm đổi số "2 bình luận" của Detail-1 (bài ID 10). Comment-6 tạo dữ liệu mới nên chạy cuối, gửi vào bài ID 10.
+
+LƯU Ý KHI VIẾT PLAYWRIGHT
+- Add-1, Comment-1, Comment-2, Comment-4: nếu thuộc tính required chặn submit ở trình duyệt, đặt form.noValidate = true bằng page.evaluate rồi submit để kiểm tra phía server. Add-2 (192 ký tự) và Comment-3 (51 ký tự): nếu input có maxlength khiến chuỗi bị cắt, ghi vào Note.
+- Detail-2: bài ID 10 có 2 bình luận approved (Khách A, Khách B). Dùng page.waitForResponse để kiểm tra có request GET /article-comments?articleId=10 khi bấm mở danh sách bình luận, rồi kiểm tra danh sách hiển thị đúng 2 bình luận (tên, ngày gửi, nội dung), không có bình luận pending.
+- AdminComm-3: sau khi bấm [Ẩn] ở bình luận ID 102, kiểm tra cột status trong DB là hidden, rồi mở /news-detail?id=51 bằng context khách để xác nhận bình luận 102 không còn hiện.
+- Cột Result/Note có sẵn (Passed, <DefectID-1>) là dữ liệu cũ, chạy lại rồi mới ghi kết quả. Không sửa nội dung test case.
