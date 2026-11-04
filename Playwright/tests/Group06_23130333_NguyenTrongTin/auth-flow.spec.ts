@@ -2,16 +2,16 @@ import { expect, test, type Page } from '@playwright/test';
 import mysql from 'mysql2/promise';
 import type { RowDataPacket } from 'mysql2/promise';
 
-let loginFormPassed = false;
-let lockedLoginPassed = false;
-let customerLoginPassed = false;
-let logoutPassed = false;
-let registrationPassed = false;
-let forgotPasswordPassed = false;
+const dependencies: Record<string, string[]> = {
+  'AUTH_Register-4': ['AUTH_Register-3'],
+  'AUTH_Reset-2': ['AUTH_Forgot-2'],
+  'AUTH_Reset-3': ['AUTH_Reset-2'],
+  'AUTH_Reset-4': ['AUTH_Reset-3'],
+};
+
+const caseResults = new Map<string, boolean>();
+
 let activeResetToken = '';
-let invalidResetTokenPassed = false;
-let resetTokenPagePassed = false;
-let resetPasswordPassed = false;
 
 function requiredEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -20,12 +20,6 @@ function requiredEnv(name: string): string {
     return '';
   }
   return value;
-}
-
-function requirePassed(passed: boolean, caseId: string): void {
-  if (!passed) {
-    test.skip(true, `Blocked: prerequisite ${caseId} did not pass.`);
-  }
 }
 
 function requireDestructiveDbPermission(): void {
@@ -55,9 +49,26 @@ async function signIn(page: Page, loginInfo: string, password: string): Promise<
 }
 
 test.describe('AUTH - Authentication flows', () => {
-  test.describe('Login form, locked account and active session dependencies', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'default' });
 
+  test.beforeEach(({}, testInfo) => {
+    const caseId = testInfo.title.match(/\bAUTH_[A-Za-z]+-\d+\b/)?.[0];
+    for (const prerequisite of dependencies[caseId ?? ''] ?? []) {
+      test.skip(
+        caseResults.get(prerequisite) !== true,
+        `Blocked: prerequisite ${prerequisite} did not pass.`,
+      );
+    }
+  });
+
+  test.afterEach(async ({}, testInfo) => {
+    const caseId = testInfo.title.match(/\bAUTH_[A-Za-z]+-\d+\b/)?.[0];
+    if (caseId) {
+      caseResults.set(caseId, testInfo.status === 'passed');
+    }
+  });
+
+  test.describe('Login form, locked account and active session checks', () => {
     test('AUTH_Login-1: Hiển thị form đăng nhập khi chưa đăng nhập', async ({ page }) => {
       await page.goto('login');
 
@@ -66,22 +77,18 @@ test.describe('AUTH - Authentication flows', () => {
       await expect(page.locator('input[name="loginInfo"]')).toHaveValue('');
       await expect(page.locator('input[name="password"]')).toBeVisible();
       await expect(page.locator('input[name="password"]')).toHaveValue('');
-      loginFormPassed = true;
     });
 
     test('AUTH_Login-5: Từ chối đăng nhập tài khoản bị khóa', async ({ page }) => {
-      requirePassed(loginFormPassed, 'AUTH_Login-1');
       const lockedEmail = requiredEnv('PW_AUTH_LOCKED_EMAIL');
       const lockedPassword = requiredEnv('PW_AUTH_LOCKED_PASSWORD');
 
       await signIn(page, lockedEmail, lockedPassword);
 
       await expect(page.locator('.alert-error')).toContainText('Tài khoản đã bị khóa');
-      lockedLoginPassed = true;
     });
 
     test('AUTH_Login-2: Chuyển về trang chủ khi tài khoản đang đăng nhập còn hoạt động', async ({ page }) => {
-      requirePassed(lockedLoginPassed, 'AUTH_Login-5');
       const email = requiredEnv('USER_EMAIL');
       const password = requiredEnv('USER_PASSWORD');
 
@@ -94,7 +101,6 @@ test.describe('AUTH - Authentication flows', () => {
   });
 
   test('AUTH_Login-4: Báo lỗi khi sai thông tin đăng nhập', async ({ page }) => {
-    requirePassed(loginFormPassed, 'AUTH_Login-1');
     await signIn(page, `missing-${Date.now()}@example.invalid`, `Invalid-${Date.now()}!`);
 
     await expect(page.locator('.alert-error')).toHaveText('Tài khoản hoặc mật khẩu không đúng');
@@ -135,21 +141,16 @@ test.describe('AUTH - Authentication flows', () => {
     }
   });
 
-  test.describe('Customer login and wishlist redirect dependency', () => {
-    test.describe.configure({ mode: 'serial' });
-
+  test.describe('Customer login and wishlist redirect checks', () => {
     test('AUTH_Login-6: Đăng nhập Customer và chuyển về trang chủ', async ({ page }) => {
-      requirePassed(loginFormPassed, 'AUTH_Login-1');
       const email = requiredEnv('USER_EMAIL');
       const password = requiredEnv('USER_PASSWORD');
 
       await signIn(page, email, password);
       await expect(page).toHaveURL(/\/pkcn\/$/);
-      customerLoginPassed = true;
     });
 
     test('AUTH_Login-8: Chuyển đến Wishlist sau khi đăng nhập với continue=wishlist', async ({ page }) => {
-      requirePassed(customerLoginPassed, 'AUTH_Login-6');
       const email = requiredEnv('USER_EMAIL');
       const password = requiredEnv('USER_PASSWORD');
 
@@ -163,7 +164,6 @@ test.describe('AUTH - Authentication flows', () => {
   });
 
   test('AUTH_Login-7: Đăng nhập Admin và chuyển đến trang quản trị', async ({ page }) => {
-    requirePassed(loginFormPassed, 'AUTH_Login-1');
     const email = requiredEnv('ADMIN_EMAIL');
     const password = requiredEnv('ADMIN_PASSWORD');
 
@@ -200,17 +200,17 @@ test.describe('AUTH - Authentication flows', () => {
   });
 
   test.describe('Firebase registration and email verification dependency', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('AUTH_Register-3: Tạo tài khoản Firebase và gửi email xác thực', async () => {
       test.skip(
         true,
         'Blocked: requires an isolated Firebase test tenant and a controlled verification inbox/emulator.',
       );
     });
-
     test('AUTH_Register-4: Lưu tài khoản sau khi xác thực email', async () => {
-      requirePassed(registrationPassed, 'AUTH_Register-3');
+      test.skip(
+        true,
+        'Blocked: requires the Firebase registration and email verification flow from AUTH_Register-3.',
+      );
     });
   });
 
@@ -252,36 +252,27 @@ test.describe('AUTH - Authentication flows', () => {
       );
       activeResetToken = rows[0]?.token ?? '';
       expect(activeResetToken).not.toBe('');
-      forgotPasswordPassed = true;
     } finally {
       await connection.end();
     }
   });
 
   test('AUTH_Reset-1: Từ chối token đặt lại mật khẩu không hợp lệ hoặc hết hạn', async ({ page }) => {
-    requirePassed(forgotPasswordPassed, 'AUTH_Forgot-2');
     await page.goto(`view-reset-password?token=invalid-${Date.now()}`);
 
     await expect(page.locator('#resetForm')).toHaveCount(0);
     await expect(page.locator('h2')).toHaveText('Token không hợp lệ hoặc đã hết hạn');
-    invalidResetTokenPassed = true;
   });
 
   test.describe('Valid reset token, password change and token reuse dependency', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('AUTH_Reset-2: Hiển thị form khi token đặt lại mật khẩu hợp lệ', async ({ page }) => {
-      requirePassed(forgotPasswordPassed, 'AUTH_Forgot-2');
       await page.goto(`view-reset-password?token=${encodeURIComponent(activeResetToken)}`);
 
       await expect(page.locator('#resetForm')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Thiết lập mật khẩu mới' })).toBeVisible();
-      resetTokenPagePassed = true;
     });
 
     test('AUTH_Reset-3: Đặt lại mật khẩu thành công qua giao diện', async ({ page }) => {
-      requirePassed(invalidResetTokenPassed, 'AUTH_Reset-1');
-      requirePassed(resetTokenPagePassed, 'AUTH_Reset-2');
       const newPassword = requiredEnv('PW_AUTH_RESET_NEW_PASSWORD');
 
       await page.goto(`view-reset-password?token=${encodeURIComponent(activeResetToken)}`);
@@ -297,11 +288,9 @@ test.describe('AUTH - Authentication flows', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('Cập nhật mật khẩu thành công');
-      resetPasswordPassed = true;
     });
 
     test('AUTH_Reset-4: Không sử dụng lại token sau khi đã đổi mật khẩu', async ({ page }) => {
-      requirePassed(resetPasswordPassed, 'AUTH_Reset-3');
       await page.goto(`view-reset-password?token=${encodeURIComponent(activeResetToken)}`);
 
       await expect(page.locator('#resetForm')).toHaveCount(0);
@@ -316,11 +305,10 @@ test.describe('AUTH - Authentication flows', () => {
     );
   });
 
-  test.describe('Logout and protected-page history dependency', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe('Logout and protected-page history checks', () => {
+    test.describe.configure({ mode: 'default' });
 
     test('AUTH_Logout-1: Đăng xuất và chuyển về trang chủ', async ({ page }) => {
-      requirePassed(customerLoginPassed, 'AUTH_Login-6');
       const email = requiredEnv('USER_EMAIL');
       const password = requiredEnv('USER_PASSWORD');
 
@@ -328,11 +316,9 @@ test.describe('AUTH - Authentication flows', () => {
       await expect(page).toHaveURL(/\/pkcn\/$/);
       await page.goto('logout');
       await expect(page).toHaveURL(/\/pkcn\/$/);
-      logoutPassed = true;
     });
 
     test('AUTH_Logout-3: Không truy cập lại trang nội bộ sau khi đăng xuất', async ({ page }) => {
-      requirePassed(logoutPassed, 'AUTH_Logout-1');
       const email = requiredEnv('USER_EMAIL');
       const password = requiredEnv('USER_PASSWORD');
 
