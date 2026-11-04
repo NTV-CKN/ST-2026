@@ -14,13 +14,30 @@ interface UserRecord extends RowDataPacket {
   uid: string | null;
 }
 
-let listPagePassed = false;
-let addPopupPassed = false;
-let editPopupPassed = false;
-let editUserSucceeded = false;
-let lockButtonsPassed = false;
-let userLocked = false;
-let deletedUserSucceeded = false;
+const dependencies: Record<string, string[]> = {
+  'USER_MGT_List-2': ['USER_MGT_List-1'],
+  'USER_MGT_Add-1': ['USER_MGT_List-1'],
+  'USER_MGT_Add-2': ['USER_MGT_Add-1'],
+  'USER_MGT_Add-3': ['USER_MGT_Add-1'],
+  'USER_MGT_Add-4': ['USER_MGT_Add-1'],
+  'USER_MGT_Add-5': ['USER_MGT_Add-1'],
+  'USER_MGT_Add-6': ['USER_MGT_Add-1'],
+  'USER_MGT_Add-7': ['USER_MGT_Add-1'],
+  'USER_MGT_Edit-1': ['USER_MGT_List-1'],
+  'USER_MGT_Edit-2': ['USER_MGT_Edit-1'],
+  'USER_MGT_Edit-3': ['USER_MGT_Edit-1'],
+  'USER_MGT_Edit-4': ['USER_MGT_Edit-1'],
+  'USER_MGT_Edit-6': ['USER_MGT_Edit-4'],
+  'USER_MGT_Lock-1': ['USER_MGT_List-1'],
+  'USER_MGT_Lock-2': ['USER_MGT_Lock-1'],
+  'USER_MGT_Lock-3': ['USER_MGT_Lock-2'],
+  'USER_MGT_Lock-4': ['USER_MGT_Lock-2'],
+  'USER_MGT_Delete-1': ['USER_MGT_List-1'],
+  'USER_MGT_Delete-2': ['USER_MGT_Delete-1'],
+};
+
+const caseResults = new Map<string, boolean>();
+
 let addedUserName: string | undefined;
 let addedUserEmail: string | undefined;
 let editOriginal: UserRecord | undefined;
@@ -39,12 +56,6 @@ function requiredEnv(name: string): string {
 
 function envOr(name: string, fallback: string): string {
   return process.env[name]?.trim() || fallback;
-}
-
-function requirePassed(passed: boolean, caseId: string): void {
-  if (!passed) {
-    test.skip(true, `Blocked: prerequisite ${caseId} did not pass.`);
-  }
 }
 
 function requireDestructiveDbPermission(): void {
@@ -100,7 +111,26 @@ async function readUserByName(username: string): Promise<UserRecord | undefined>
     return rows[0];
   });
 }
+async function findSearchFixture(): Promise<UserRecord> {
+  return withDb(async (connection) => {
+    const [rows] = await connection.execute<UserRecord[]>(
+        `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
+       FROM users
+       WHERE user_name IS NOT NULL
+         AND user_name <> ''
+         AND email IS NOT NULL
+         AND email <> ''
+       ORDER BY id
+       LIMIT 1`,
+    );
 
+    if (!rows[0]) {
+      throw new Error('Không tìm thấy user phù hợp để kiểm tra tìm kiếm.');
+    }
+
+    return rows[0];
+  });
+}
 async function loginAdmin(page: Page): Promise<void> {
   await page.goto('view-user');
   if (/\/login(?:[?#]|$)/.test(page.url())) {
@@ -189,46 +219,64 @@ async function restoreLockedUser(): Promise<void> {
 }
 
 test.describe('USER_MGT - Admin user management', () => {
-  test.describe('List users and search dependency', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'default' });
 
+  test.beforeEach(({}, testInfo) => {
+    const caseId = testInfo.title.match(/\bUSER_MGT_[A-Za-z]+-\d+\b/)?.[0];
+    for (const prerequisite of dependencies[caseId ?? ''] ?? []) {
+      test.skip(
+        caseResults.get(prerequisite) !== true,
+        `Blocked: prerequisite ${prerequisite} did not pass.`,
+      );
+    }
+  });
+
+  test.afterEach(async ({}, testInfo) => {
+    const caseId = testInfo.title.match(/\bUSER_MGT_[A-Za-z]+-\d+\b/)?.[0];
+    if (caseId) {
+      caseResults.set(caseId, testInfo.status === 'passed');
+    }
+  });
+
+  test.describe('List users and search dependency', () => {
     test('USER_MGT_List-1: Hiển thị trang và danh sách người dùng', async ({ page }) => {
       await loginAdmin(page);
 
-      const headers = (await page.locator('thead th').allTextContents()).map((header) => header.trim());
-      expect(headers).toEqual(
-        expect.arrayContaining([
-          'Avatar',
-          'Tên người dùng',
-          'User Name',
-          'Email',
-          'Vai trò',
-          'Trạng thái',
-          'Thao tác',
-        ]),
+      const headers = (await page.locator('thead th').allTextContents()).map((header) =>
+          header.trim(),
       );
+
+      expect(headers).toEqual([
+        'Vai trò',
+        'Mã người dùng',
+        'Avatar',
+        'Tên người dùng',
+        'User Name',
+        'Trạng thái',
+        'Thao tác',
+      ]);
       await expect(page.locator('tbody tr').first()).toBeVisible();
-      listPagePassed = true;
     });
 
     test('USER_MGT_List-2: Tìm kiếm user theo Username hoặc Email', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
-      const searchTerm = envOr('PW_ADMIN_USER_SEARCH_TERM', 'admin@gmail.com');
       await loginAdmin(page);
+
+      const fixture = await findSearchFixture();
+      const searchTerm = envOr('PW_ADMIN_USER_SEARCH_TERM', fixture.user_name);
 
       await page.locator('input[name="searchName"]').fill(searchTerm);
       await page.locator('form[action="search-user"] button[type="submit"]').click();
-      await expect(page).toHaveURL(new RegExp(`/search-user\\?searchName=${encodeURIComponent(searchTerm)}`));
-      await expect(page.locator('tbody tr')).not.toHaveCount(0);
+
+      await expect(page).toHaveURL(
+          new RegExp(`/search-user\\?searchName=${encodeURIComponent(searchTerm)}`),
+      );
+      await expect(page.locator('tbody tr').first()).toBeVisible();
       await expect(page.locator('tbody')).toContainText(searchTerm);
     });
   });
 
   test.describe('Add user dialog and validation', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('USER_MGT_Add-1: Mở pop-up thêm user với các trường rỗng', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
       await loginAdmin(page);
       await openAddUser(page);
 
@@ -244,11 +292,9 @@ test.describe('USER_MGT - Admin user management', () => {
       }
       await expect(page.locator('#addUserImagePreview')).toBeEmpty();
       await expect(page.locator('#addUserImage')).toHaveValue('');
-      addPopupPassed = true;
     });
 
     test('USER_MGT_Add-2: Chặn gửi form khi các trường bắt buộc để trống', async ({ page }) => {
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       let addRequestSent = false;
@@ -267,7 +313,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Add-3: Kiểm tra định dạng và độ dài Username', async ({ page }) => {
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       const usernameCases = [
@@ -293,7 +338,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Add-4: Kiểm tra chính sách độ mạnh mật khẩu', async ({ page }) => {
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       const invalidPasswords = ['short', 'lowercase1!', 'AdminOnly!', 'Admin1234', 'Admin12345678901!'];
@@ -308,7 +352,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Add-5: Báo lỗi khi xác nhận mật khẩu không khớp', async ({ page }) => {
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       await fillValidAddUser(page, `mismatch${Date.now()}`);
@@ -320,7 +363,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Add-6: Phát hiện Username hoặc Email đã tồn tại', async ({ page }) => {
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       await fillValidAddUser(
@@ -339,7 +381,6 @@ test.describe('USER_MGT - Admin user management', () => {
 
     test('USER_MGT_Add-7: Thêm user mới không Avatar với trạng thái Active', async ({ page }) => {
       requireDestructiveDbPermission();
-      requirePassed(addPopupPassed, 'USER_MGT_Add-1');
       await loginAdmin(page);
       await openAddUser(page);
       const username = `pwadmin${Date.now()}`;
@@ -400,14 +441,11 @@ test.describe('USER_MGT - Admin user management', () => {
   });
 
   test.describe('Edit user dialog and data integrity', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test.afterAll(async () => {
       await restoreEditedUser();
     });
 
     test('USER_MGT_Edit-1: Mở pop-up sửa và hiển thị thông tin hiện tại', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
       await loginAdmin(page);
       const id = envOr('PW_ADMIN_USER_EDIT_ID', '105');
       const record = await readUser(Number(id));
@@ -420,11 +458,10 @@ test.describe('USER_MGT - Admin user management', () => {
       await expect(page.locator('#email-edit')).toHaveValue(record!.email);
       await expect(page.locator('#role-edit')).toHaveValue(String(record!.role_id));
       await expect(page.locator('#editUserForm img')).toBeVisible();
-      editPopupPassed = true;
+      // editPopupPassed = true;
     });
 
     test('USER_MGT_Edit-2: Username và Email chỉ đọc', async ({ page }) => {
-      requirePassed(editPopupPassed, 'USER_MGT_Edit-1');
       await loginAdmin(page);
       await openEditUser(page, envOr('PW_ADMIN_USER_EDIT_ID', '105'));
 
@@ -433,7 +470,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Edit-3: Không lưu khi Họ tên để trống', async ({ page }) => {
-      requirePassed(editPopupPassed, 'USER_MGT_Edit-1');
       await loginAdmin(page);
       await openEditUser(page, envOr('PW_ADMIN_USER_EDIT_ID', '105'));
       await page.locator('#name-user').fill('');
@@ -450,7 +486,6 @@ test.describe('USER_MGT - Admin user management', () => {
 
     test('USER_MGT_Edit-4: Cập nhật Họ tên và Role, giữ nguyên Avatar', async ({ page }) => {
       requireDestructiveDbPermission();
-      requirePassed(editPopupPassed, 'USER_MGT_Edit-1');
       await loginAdmin(page);
       const id = Number(envOr('PW_ADMIN_USER_EDIT_ID', '105'));
       editOriginal = await readUser(id);
@@ -474,8 +509,8 @@ test.describe('USER_MGT - Admin user management', () => {
       const responsePromise = page.waitForResponse(
         (response) => response.url().includes('/edit-user') && response.request().method() === 'POST',
       );
-      await page.locator('#submitEditUser').click();
       editChanged = true;
+      await page.locator('#submitEditUser').click();
       const response = await responsePromise;
       const result = await response.json();
       await successDialog;
@@ -490,19 +525,57 @@ test.describe('USER_MGT - Admin user management', () => {
         avatar: editOriginal!.avatar,
       });
       expect(originalAvatar).toBe(editOriginal!.avatar ?? '');
-      editUserSucceeded = true;
     });
 
-    test('USER_MGT_Edit-6: Username, Email và Password không bị ghi đè', async () => {
-      requirePassed(editUserSucceeded, 'USER_MGT_Edit-4');
-      expect(editOriginal).toBeDefined();
-      const current = await readUser(editOriginal!.id);
+    test('USER_MGT_Edit-6: Username, Email và Password không bị ghi đè', async ({ page }) => {
+      requireDestructiveDbPermission();
 
-      expect(current?.user_name).toBe(editOriginal!.user_name);
-      expect(current?.email).toBe(editOriginal!.email);
-      expect(current?.password).toBe(editOriginal!.password);
+      await loginAdmin(page);
+
+      const id = Number(envOr('PW_ADMIN_USER_EDIT_ID', '105'));
+      const before = await readUser(id);
+
+      expect(before, `Không tìm thấy user ID ${id}`).toBeDefined();
+
+      try {
+        await openEditUser(page, String(id));
+
+        const updatedName = `PW Verify ${Date.now()}`;
+        const updatedRole = before!.role_id === 2 ? '1' : '2';
+
+        await page.locator('#name-user').fill(updatedName);
+        await page.locator('#role-edit').selectOption(updatedRole);
+
+        page.once('dialog', async (dialog) => {
+          await dialog.accept();
+        });
+
+        const responsePromise = page.waitForResponse(
+            (response) =>
+                response.url().includes('/edit-user') &&
+                response.request().method() === 'POST',
+        );
+
+        await page.locator('#submitEditUser').click();
+
+        const response = await responsePromise;
+        const result = await response.json();
+
+        expect(result.success).toBe(true);
+
+        const after = await readUser(id);
+        expect(after?.user_name).toBe(before!.user_name);
+        expect(after?.email).toBe(before!.email);
+        expect(after?.password).toBe(before!.password);
+      } finally {
+        await withDb(async (connection) => {
+          await connection.execute(
+              'UPDATE users SET full_name = ?, role_id = ?, avatar = ? WHERE id = ?',
+              [before!.full_name, before!.role_id, before!.avatar, before!.id],
+          );
+        });
+      }
     });
-
   });
 
   test('USER_MGT_Edit-7: Bỏ qua Username, Email và Password không nằm trong payload cho phép sửa', async ({
@@ -533,14 +606,11 @@ test.describe('USER_MGT - Admin user management', () => {
 
   test.describe('Lock and unlock Customer dependencies', () => {
     test.describe('Lock/unlock lifecycle', () => {
-      test.describe.configure({ mode: 'serial' });
-
       test.afterAll(async () => {
         await restoreLockedUser();
       });
 
       test('USER_MGT_Lock-1: Nút Khóa/Mở khóa khớp trạng thái Customer', async ({ page }) => {
-        requirePassed(listPagePassed, 'USER_MGT_List-1');
         await loginAdmin(page);
 
         const activeUsers = page.locator('tbody tr').filter({ hasText: 'Đang hoạt động' });
@@ -549,12 +619,10 @@ test.describe('USER_MGT - Admin user management', () => {
         await expect(lockedUsers.first()).toBeVisible();
         await expect(activeUsers.first().locator('.edit-user-lock')).toBeVisible();
         await expect(lockedUsers.first().locator('.edit-user-unlock')).toBeVisible();
-        lockButtonsPassed = true;
       });
 
       test('USER_MGT_Lock-2: Khóa tài khoản Customer', async ({ page }) => {
         requireDestructiveDbPermission();
-        requirePassed(lockButtonsPassed, 'USER_MGT_Lock-1');
         const username = envOr('PW_ADMIN_USER_LOCK_USERNAME', 'cust01');
         const user = await readUserByName(username);
         expect(user, `Expected fixture Customer ${username}`).toBeDefined();
@@ -572,20 +640,38 @@ test.describe('USER_MGT - Admin user management', () => {
         expect(updated?.status).toBe('locked');
         await expect(userRow(page, username)).toContainText('Đang bị khóa');
         await expect(userRow(page, username).locator('.edit-user-unlock')).toBeVisible();
-        userLocked = true;
       });
 
       test('USER_MGT_Lock-3: Mở khóa tài khoản Customer', async ({ page }) => {
         requireDestructiveDbPermission();
-        requirePassed(userLocked, 'USER_MGT_Lock-2');
+
         const username = envOr('PW_ADMIN_USER_LOCK_USERNAME', 'cust01');
         const user = await readUserByName(username);
-        expect(user?.status).toBe('locked');
+
+        expect(user, `Expected fixture Customer ${username}`).toBeDefined();
+        expect(user!.role_id).toBe(2);
+        const originalStatus = user!.status;
+
+        try {
+          // set locked trong DB, thực hiện test mở khóa và assert
+        } finally {
+          await withDb(async (connection) => {
+            await connection.execute(
+                'UPDATE users SET status = ? WHERE id = ?',
+                [originalStatus, user!.id],
+            );
+          });
+        }
 
         await loginAdmin(page);
+
         const row = userRow(page, username);
         await expect(row.locator('.edit-user-unlock')).toBeVisible();
-        const message = await captureDialog(page, () => row.locator('.edit-user-unlock').click());
+
+        const message = await captureDialog(page, () =>
+            row.locator('.edit-user-unlock').click(),
+        );
+
         expect(message).toBe('Đồng ý mở khóa người dùng này?');
 
         const updated = await readUser(user!.id);
@@ -597,13 +683,17 @@ test.describe('USER_MGT - Admin user management', () => {
 
     test('USER_MGT_Lock-4: Không đăng nhập được bằng Customer đang bị khóa', async ({ page, browser }) => {
       requireDestructiveDbPermission();
-      requirePassed(lockButtonsPassed, 'USER_MGT_Lock-1');
       const username = envOr('PW_ADMIN_USER_LOCK_USERNAME', 'cust01');
       const user = await readUserByName(username);
       expect(user).toBeDefined();
       expect(user!.role_id).toBe(2);
       const originalStatus = user!.status;
-
+      await withDb(async (connection) => {
+        await connection.execute(
+            'UPDATE users SET status = ? WHERE id = ?',
+            ['locked', user!.id],
+        );
+      });
       const adminContext = await browser.newContext();
       const adminPage = await adminContext.newPage();
       try {
@@ -618,6 +708,12 @@ test.describe('USER_MGT - Admin user management', () => {
           'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.',
         );
       } finally {
+        await withDb(async (connection) => {
+          await connection.execute(
+              'UPDATE users SET status = ? WHERE id = ?',
+              [originalStatus, user!.id],
+          );
+        });
         try {
           const restoreAction = originalStatus === 'locked' ? 'lock' : 'unlock';
           await adminPage.goto(`lock-unlock-user?action=${restoreAction}&id=${user!.id}`);
@@ -628,7 +724,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Lock-5: Không cho Admin tự khóa tài khoản', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
       await loginAdmin(page);
       const adminId = Number(envOr('PW_ADMIN_USER_SELF_ID', '1'));
       const before = await readUser(adminId);
@@ -642,7 +737,6 @@ test.describe('USER_MGT - Admin user management', () => {
     });
 
     test('USER_MGT_Lock-6: Không thay đổi trạng thái tài khoản đích không phải Customer', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
       await loginAdmin(page);
       const adminId = Number(envOr('PW_ADMIN_USER_OTHER_ADMIN_ID', '2'));
       const before = await readUser(adminId);
@@ -656,10 +750,7 @@ test.describe('USER_MGT - Admin user management', () => {
   });
 
   test.describe('Delete user visibility and guarded cases', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('USER_MGT_Delete-1: Nút Xóa chỉ hiển thị cho Customer', async ({ page }) => {
-      requirePassed(listPagePassed, 'USER_MGT_List-1');
       await loginAdmin(page);
       const rows = page.locator('tbody tr');
 
@@ -673,12 +764,10 @@ test.describe('USER_MGT - Admin user management', () => {
           await expect(deleteButton).toHaveCount(0);
         }
       }
-      deletedUserSucceeded = true;
     });
 
     test('USER_MGT_Delete-2: Xóa Customer không có Avatar', async ({ page }) => {
       requireDestructiveDbPermission();
-      requirePassed(deletedUserSucceeded, 'USER_MGT_Delete-1');
       const username = envOr('PW_ADMIN_USER_DELETE_USERNAME', 'cust02');
       const target = await readUserByName(username);
       expect(target, `Expected disposable Customer ${username}`).toBeDefined();

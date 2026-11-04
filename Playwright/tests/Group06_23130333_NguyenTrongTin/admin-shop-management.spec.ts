@@ -23,8 +23,6 @@ interface ShopFormData {
   img_url: string;
 }
 
-let shopListPassed = false;
-let shopEditPassed = false;
 let createdShopName: string | undefined;
 let createdShopPhone: string | undefined;
 let editedShopOriginal: ShopRecord | undefined;
@@ -221,6 +219,8 @@ async function postShopAction(
 }
 
 test.describe('ADM_SHOP - Admin shop management', () => {
+  test.describe.configure({ mode: 'default' });
+
   test('ADM_SHOP_AUTH-01: Chặn truy cập shop-info khi chưa đăng nhập', async ({ request }) => {
     const response = await request.get('admin/shop-info', { maxRedirects: 0 });
     expect(response.status()).toBe(302);
@@ -281,12 +281,10 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     expect(renderedIds.length).toBeGreaterThan(0);
     expect(renderedIds).toEqual(shops.map((shop) => shop.id));
     expect(renderedIds).toEqual([...renderedIds].sort((a, b) => b - a));
-    shopListPassed = true;
   });
 
   test.describe('Shop search', () => {
     test('ADM_SHOP_SRCH-01: Tìm chính xác cửa hàng theo ID và số điện thoại', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       await loginAdmin(page);
       const [shop] = await readShops();
       expect(shop, 'Expected at least one shop search fixture').toBeDefined();
@@ -306,7 +304,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     });
 
     test('ADM_SHOP_SRCH-02: Tìm tương đối theo thông tin cửa hàng', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       const term = process.env.PW_ADMIN_SHOP_FUZZY_TERM?.trim() || 'Cầu Giấy';
       const fixtures = await searchShopsInDb(term);
       test.skip(fixtures.length === 0, `Blocked: no shop fixture contains "${term}".`);
@@ -321,7 +318,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     });
 
     test('ADM_SHOP_SRCH-03: Hiển thị rỗng khi không có kết quả', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       const fixtures = await searchShopsInDb('XYZ123');
       test.skip(fixtures.length > 0, 'Blocked: XYZ123 exists in the configured shop database.');
 
@@ -335,10 +331,7 @@ test.describe('ADM_SHOP - Admin shop management', () => {
   });
 
   test.describe('Shop creation validation', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('ADM_SHOP_CREATE-01: Không gửi form khi thiếu trường bắt buộc', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       await loginAdmin(page);
       const form = page.locator('form.editor-form').first();
       const data = newShopData('required');
@@ -392,7 +385,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_CREATE-02: Thêm cửa hàng khi các trường tùy chọn để trống', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     await loginAdmin(page);
     const data = newShopData('optional');
     createdShopName = data.shop_name;
@@ -415,7 +407,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_CREATE-03: Chỉ giữ một cửa hàng ở trạng thái hoạt động', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const originalStatuses = await withDb(async (connection) => {
       const [rows] = await connection.execute<(RowDataPacket & { id: number; status: number })[]>(
         'SELECT id, status FROM contact_shops',
@@ -490,12 +481,9 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     expect(result.status).toBe(404);
   });
 
-  test.describe('Shop edit and active-status dependency', () => {
-    test.describe.configure({ mode: 'serial' });
-
+  test.describe('Shop edit and active-status checks', () => {
     test('ADM_SHOP_EDIT-03: Cập nhật tên và số điện thoại cửa hàng', async ({ page }) => {
       requireShopWritePermission();
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       const id = Number(process.env.PW_ADMIN_SHOP_EDIT_ID || 1);
       editedShopOriginal = await readShop(id);
       expect(editedShopOriginal, `Expected shop fixture ID ${id}`).toBeDefined();
@@ -516,7 +504,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
           shop_name: updatedName,
           shop_phone_number: updatedPhone,
         });
-        shopEditPassed = true;
       } finally {
         await restoreEditedShop();
       }
@@ -524,8 +511,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
     test('ADM_SHOP_EDIT-04: Chuyển shop sang hoạt động và ẩn các shop còn lại', async ({ page }) => {
       requireShopWritePermission();
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
-      if (!shopEditPassed) test.skip(true, 'Blocked: ADM_SHOP_EDIT-03 did not pass.');
       const originalStatuses = await withDb(async (connection) => {
         const [rows] = await connection.execute<(RowDataPacket & { id: number; status: number })[]>(
           'SELECT id, status FROM contact_shops ORDER BY id',
@@ -578,7 +563,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_DEL-03: Xóa thành công cửa hàng tạm do test tạo', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('delete');
     createdShopName = data.shop_name;
     createdShopPhone = data.shop_phone_number;
@@ -611,7 +595,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_SEC-01: Lưu và hiển thị đúng URL Facebook, Instagram', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('social');
     createdShopName = data.shop_name;
     createdShopPhone = data.shop_phone_number;
@@ -642,7 +625,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_SEC-02: Escape nội dung XSS khi hiển thị tên cửa hàng', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('xss');
     const payload = "<script>alert('XSS')</script>";
     data.shop_name = payload;
