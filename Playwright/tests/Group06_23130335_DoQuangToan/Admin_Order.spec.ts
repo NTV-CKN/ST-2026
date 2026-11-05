@@ -162,7 +162,7 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_CreateAddress_001: Không tạo đơn khi chưa chọn địa chỉ nhận hàng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
+    await selectCustomer(page, '33');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '110');
     await page.getByRole('button', { name: 'Tạo đơn và giữ tồn kho' }).click();
@@ -172,8 +172,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_CreatePayment_001: Không tạo đơn khi chưa chọn phương thức thanh toán', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectProduct(page, '111');
     await page.getByRole('button', { name: 'Tạo đơn và giữ tồn kho' }).click();
 
@@ -182,8 +182,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_CreateProduct_001: Không tạo đơn khi chưa chọn sản phẩm', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await page.getByRole('button', { name: 'Tạo đơn và giữ tồn kho' }).click();
 
@@ -192,8 +192,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_CreateValid_001: Tạo đơn hàng với dữ liệu hợp lệ', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '111');
     await page.getByRole('button', { name: '+ Thêm sản phẩm' }).click();
@@ -204,8 +204,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_AddProduct_001: Thêm sản phẩm vào đơn hàng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '105');
     await page.getByRole('button', { name: '+ Thêm sản phẩm' }).click();
@@ -219,8 +219,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_RemoveProduct_001: Xóa sản phẩm khỏi đơn hàng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '105');
     await page.getByRole('button', { name: '+ Thêm sản phẩm' }).click();
@@ -234,8 +234,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_MultipleProducts_001: Thêm nhiều sản phẩm vào đơn hàng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '105');
     await page.getByRole('button', { name: '+ Thêm sản phẩm' }).click();
@@ -252,8 +252,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_QuantityZero_001: Nhập số lượng bằng 0', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '108');
     await page.getByRole('spinbutton', { name: 'Số lượng' }).fill('0');
@@ -264,8 +264,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_NegativeQuantity_001: Nhập số lượng âm', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '108');
     await page.getByRole('spinbutton', { name: 'Số lượng' }).fill('-1');
@@ -276,8 +276,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_EmptyQuantity_001: Không nhập số lượng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '108');
     await page.getByRole('spinbutton', { name: 'Số lượng' }).fill('');
@@ -288,8 +288,8 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_DecimalQuantity_001: Không cho tạo đơn với số lượng thập phân', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
-    await selectAddress(page, '23');
+    await selectCustomer(page, '33');
+    await selectAddress(page, '24');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '108');
     await page.getByRole('spinbutton', { name: 'Số lượng' }).fill('1.5');
