@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Dat bien moi truong TEST_PASSWORD truoc khi chay test.
+const TEST_PASSWORD = process.env.TEST_PASSWORD ?? 'vudeptrai2k5';
+
 test('CART_AddToCart_Success_001 - Them san pham thanh cong', async ({ page }) => {
     await page.goto('http://localhost:8080/product-detail?id=185');
     await page.waitForTimeout(1500);
@@ -8,7 +11,7 @@ test('CART_AddToCart_Success_001 - Them san pham thanh cong', async ({ page }) =
     await page.getByRole('link', { name: 'Đăng nhập' }).click();
     await page.waitForTimeout(1500);
 
- 
+
     await page.getByRole('textbox', {
         name: 'Tên đăng nhập hoặc email'
     }).fill('user@gmail.com');
@@ -16,10 +19,10 @@ test('CART_AddToCart_Success_001 - Them san pham thanh cong', async ({ page }) =
 
     await page.getByRole('textbox', {
         name: 'Mật khẩu'
-    }).fill('vudeptrai2k5');
+    }).fill(TEST_PASSWORD);
     await page.waitForTimeout(1500);
 
-  
+
     await page.getByRole('textbox', {
         name: 'Mật khẩu'
     }).press('Enter');
@@ -73,7 +76,7 @@ test('CART_AddToCart_Quantity2_001 - Them san pham so luong 2', async ({ page })
     // Buoc 4: Nhap mat khau
     await page.getByRole('textbox', {
         name: 'Mật khẩu'
-    }).fill('vudeptrai2k5');
+    }).fill(TEST_PASSWORD);
     await page.waitForTimeout(1500);
 
     // Buoc 5: Nhan Enter de dang nhap
@@ -140,7 +143,7 @@ test('CART_AddToCart_QuantityZero_001 - Khong cho them so luong 0', async ({ pag
     // Buoc 4: Nhap mat khau
     await page.getByRole('textbox', {
         name: 'Mật khẩu'
-    }).fill('vudeptrai2k5');
+    }).fill(TEST_PASSWORD);
     await page.waitForTimeout(1500);
 
     // Buoc 5: Dang nhap
@@ -176,9 +179,9 @@ test('CART_AddToCart_QuantityZero_001 - Khong cho them so luong 0', async ({ pag
     await page.waitForTimeout(1500);
 
     // Buoc 11: Kiem tra quy tac xac thuc cua o so luong
-    const isValid = await quantityInput.evaluate(
-        input => input.checkValidity()
-    );
+    const isValid = await quantityInput.evaluate(input => {
+        return (input as HTMLInputElement).checkValidity();
+    });
 
     expect(isValid).toBe(false);
     await page.waitForTimeout(1500);
@@ -202,7 +205,7 @@ test('CART_AddToCart_OutOfStock_001 - Khong them san pham het hang', async ({ pa
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', { name: 'Đăng Nhập' }).click();
@@ -241,7 +244,7 @@ test('CART_AddToCart_ExceedStock_001 - Khong them vuot ton kho', async ({ page }
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('textbox', {
@@ -311,7 +314,7 @@ test('CART_AddToCart_Duplicate_001 - Them trung san pham vao gio hang', async ({
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('textbox', {
@@ -380,7 +383,7 @@ test('CART_AddToCart_DifferentProduct_001 - Them san pham khac vao gio hang', as
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('textbox', {
@@ -443,7 +446,7 @@ test('CART_AddToCart_NoVariant_001 - Khong chon bien the', async ({ page }) => {
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -466,7 +469,7 @@ test('CART_AddToCart_NoVariant_001 - Khong chon bien the', async ({ page }) => {
 
     // 6. Bo chon bien the bang JavaScript
     await variants.first().evaluate(element => {
-        element.checked = false;
+        (element as HTMLInputElement).checked = false;
     });
     await page.waitForTimeout(1500);
 
@@ -506,7 +509,7 @@ test('CART_AddToCart_SelectVariant_001 - Them san pham co bien the', async ({ pa
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -617,7 +620,7 @@ test('CART_AddToCart_LoggedIn_001 - Them san pham khi da dang nhap', async ({ pa
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -680,7 +683,7 @@ test('CART_AddToCart_CartBadge_001 - Cap nhat so luong tren bieu tuong gio hang'
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -743,7 +746,7 @@ test('CART_AddToCart_Subtotal_001 - Kiem tra thanh tien san pham', async ({ page
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -805,7 +808,7 @@ test('CART_AddToCart_Refresh_001 - Giu san pham sau khi tai lai trang', async ({
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -881,7 +884,7 @@ test('CART_AddToCart_NetworkError_001 - Xu ly loi mang khi them san pham', async
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -951,7 +954,7 @@ test('CART_AddToCart_EmptyQuantity_001 - Khong nhap so luong san pham', async ({
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -1022,7 +1025,7 @@ test('CART_AddToCart_DecimalQuantity_001 - Khong cho nhap so thap phan', async (
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -1063,11 +1066,15 @@ test('CART_AddToCart_DecimalQuantity_001 - Khong cho nhap so thap phan', async (
     console.log('Gia tri hien tai:', actualValue);
 
     // Kiem tra tinh hop le cua o so luong
-    const validity = await quantityInput.evaluate(element => ({
-        valid: element.validity.valid,
-        stepMismatch: element.validity.stepMismatch,
-        badInput: element.validity.badInput
-    }));
+    const validity = await quantityInput.evaluate(element => {
+        const input = element as HTMLInputElement;
+
+        return {
+            valid: input.validity.valid,
+            stepMismatch: input.validity.stepMismatch,
+            badInput: input.validity.badInput
+        };
+    });
 
     console.log('Trang thai hop le:', validity);
 
@@ -1104,7 +1111,7 @@ test('CART_AddToCart_MaxQuantity_001 - Kiem tra so luong toi da', async ({ page 
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -1179,7 +1186,7 @@ test('CART_AddToCart_VariantOutOfStock_001 - Khong the them bien the het hang', 
 
         await page.getByRole('textbox', {
             name: 'Mật khẩu'
-        }).fill('vudeptrai2k5');
+        }).fill(TEST_PASSWORD);
         await page.waitForTimeout(1500);
 
         await page.getByRole('button', {
@@ -1204,12 +1211,16 @@ test('CART_AddToCart_VariantOutOfStock_001 - Khong the them bien the het hang', 
     await page.waitForTimeout(1500);
 
     // 6. Kiem tra trang thai bien the
-    const variantInfo = await variants.first().evaluate(element => ({
-        value: element.value,
-        checked: element.checked,
-        disabled: element.disabled,
-        stock: element.getAttribute('data-stock')
-    }));
+    const variantInfo = await variants.first().evaluate(element => {
+        const input = element as HTMLInputElement;
+
+        return {
+            value: input.value,
+            checked: input.checked,
+            disabled: input.disabled,
+            stock: input.getAttribute('data-stock')
+        };
+    });
 
     console.log('Thong tin bien the:', variantInfo);
 
