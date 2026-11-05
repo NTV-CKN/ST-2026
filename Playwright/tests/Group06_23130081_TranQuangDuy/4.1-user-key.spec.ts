@@ -2,6 +2,14 @@
 
 require('dotenv').config({ path: require('node:path').resolve(__dirname, '.env') });
 
+if (process.env.BASE_URL) {
+  const configuredBase = new URL(process.env.BASE_URL);
+  configuredBase.pathname = configuredBase.pathname.replace(/\/login\/?$/, '').replace(/\/+$/, '');
+  configuredBase.search = '';
+  configuredBase.hash = '';
+  process.env.BASE_URL = configuredBase.toString().replace(/\/$/, '');
+}
+
 if (process.env.ADMIN_EMAIL && !process.env.ADMIN_USER) {
   process.env.ADMIN_USER = process.env.ADMIN_EMAIL;
 }
@@ -12,10 +20,46 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 const fs = require('node:fs');
 const base = require('@playwright/test');
 const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const { storageStateFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
 const seed = require('../phu_kien_cong_nghe/playwright/support/seed');
+const { credentialsFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
+const appBase = new URL(BASE_URL);
+appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
+appBase.search = '';
+appBase.hash = '';
+const APP_BASE_URL = appBase.toString();
+const APP_ORIGIN = new URL(APP_BASE_URL).origin;
+
+function appUrl(path) {
+  return new URL(path.replace(/^\/+/, ''), APP_BASE_URL).toString();
+}
+
+function installAppNavigation(page) {
+  const goto = page.goto.bind(page);
+  page.goto = (url, options) => goto(
+    typeof url === 'string' && url.startsWith('/') ? appUrl(url) : url,
+    options,
+  );
+  return page;
+}
+
+async function loginToApp(page, role) {
+  const credentials = role === 'admin'
+    ? credentialsFor(role)
+    : seed.userCredentials(role);
+
+  await page.goto(appUrl('/login'));
+  await page.locator('input[name="loginInfo"]').fill(credentials.username);
+  await page.locator('input[name="password"]').fill(credentials.password);
+  await page.locator('input[type="submit"]').click();
+  if (new URL(page.url()).pathname.endsWith('/login')) {
+    const error = page.locator('.alert-error');
+    const detail = await error.count() ? await error.innerText() : 'No login error message was displayed.';
+    throw new Error(`Login failed for ${role}: ${detail}`);
+  }
+}
+
 const CONTEXT_OPTIONS = {
-  baseURL: BASE_URL,
+  baseURL: APP_ORIGIN,
   locale: 'vi-VN',
   timezoneId: 'Asia/Ho_Chi_Minh',
   permissions: ['clipboard-read', 'clipboard-write'],
@@ -27,10 +71,11 @@ const test = base.test.extend({
   login: async ({ browser }, use) => {
     const contexts = [];
     await use(async (role) => {
-      const storageState = await storageStateFor(browser, role);
-      const context = await browser.newContext({ ...CONTEXT_OPTIONS, storageState });
+      const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      const page = installAppNavigation(await context.newPage());
+      await loginToApp(page, role);
+      return page;
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
@@ -39,7 +84,7 @@ const test = base.test.extend({
     await use(async () => {
       const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      return installAppNavigation(await context.newPage());
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
@@ -121,7 +166,7 @@ test('USER_KEY_View_01 — Giao diện trang Quản lý khóa số', async ({ lo
     'Quản lý khóa công khai dùng để xác thực và ký số đơn hàng',
   );
   await expect(page.locator('.breadcrumb')).toContainText('Quản lý khóa số');
-  await expect(userKeyPage.downloadTool).toHaveText(/Tải Tool kí điện tử/);
+  await expect(userKeyPage.downloadTool).toHaveText(/Tải Tool kí điện\s+tử/);
   await expect(userKeyPage.form).toBeVisible();
   await expect(page.locator('.card-title').first()).toHaveText('Đăng ký khóa mới');
   await expect(page.locator('.key-history-card .card-title')).toHaveText('Lịch sử khóa đã dùng');
