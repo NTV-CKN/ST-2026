@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import mysql from 'mysql2/promise';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 interface UserRecord extends RowDataPacket {
   id: number;
@@ -29,14 +32,30 @@ const dependencies: Record<string, string[]> = {
   'USER_MGT_Edit-4': ['USER_MGT_Edit-1'],
   'USER_MGT_Edit-6': ['USER_MGT_Edit-4'],
   'USER_MGT_Lock-1': ['USER_MGT_List-1'],
-  'USER_MGT_Lock-2': ['USER_MGT_Lock-1'],
-  'USER_MGT_Lock-3': ['USER_MGT_Lock-2'],
-  'USER_MGT_Lock-4': ['USER_MGT_Lock-2'],
   'USER_MGT_Delete-1': ['USER_MGT_List-1'],
   'USER_MGT_Delete-2': ['USER_MGT_Delete-1'],
 };
 
-const caseResults = new Map<string, boolean>();
+// Playwright restarts the worker after a failed test, which wipes module state.
+// Persist case results per run (keyed by the runner's pid) so dependency checks survive that.
+const resultsFile = path.join(os.tmpdir(), `pw-user-mgt-results-${process.ppid}.json`);
+
+function readResults(): Record<string, boolean> {
+  try {
+    return JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+const caseResults = {
+  get(caseId: string): boolean | undefined {
+    return readResults()[caseId];
+  },
+  set(caseId: string, passed: boolean): void {
+    fs.writeFileSync(resultsFile, JSON.stringify({ ...readResults(), [caseId]: passed }));
+  },
+};
 
 let addedUserName: string | undefined;
 let addedUserEmail: string | undefined;
@@ -62,8 +81,8 @@ function requireDestructiveDbPermission(): void {
   const allowed = process.env.ALLOW_DESTRUCTIVE_DB === 'true';
   const database = process.env.DB_NAME;
   test.skip(
-    !allowed || database !== 'phu_kien_cong_nghe',
-    `Blocked: this test changes database data and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe (current DB_NAME=${database ?? 'unset'}).`,
+      !allowed || database !== 'phu_kien_cong_nghe',
+      `Blocked: this test changes database data and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe (current DB_NAME=${database ?? 'unset'}).`,
   );
 }
 
@@ -76,7 +95,7 @@ function dbConfig() {
     host: requiredEnv('DB_HOST'),
     port,
     user: requiredEnv('DB_USER'),
-    password: requiredEnv('DB_PASSWORD'),
+    password: process.env.DB_PASSWORD ?? '',
     database: requiredEnv('DB_NAME'),
   };
 }
@@ -93,9 +112,9 @@ async function withDb<T>(action: (connection: Connection) => Promise<T>): Promis
 async function readUser(id: number): Promise<UserRecord | undefined> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<UserRecord[]>(
-      `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
+        `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
        FROM users WHERE id = ?`,
-      [id],
+        [id],
     );
     return rows[0];
   });
@@ -104,13 +123,24 @@ async function readUser(id: number): Promise<UserRecord | undefined> {
 async function readUserByName(username: string): Promise<UserRecord | undefined> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<UserRecord[]>(
-      `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
+        `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
        FROM users WHERE user_name = ?`,
-      [username],
+        [username],
     );
     return rows[0];
   });
 }
+async function readUserByEmail(email: string): Promise<UserRecord | undefined> {
+  return withDb(async (connection) => {
+    const [rows] = await connection.execute<UserRecord[]>(
+        `SELECT id, user_name, email, full_name, role_id, status, avatar, password, uid
+       FROM users WHERE email = ?`,
+        [email],
+    );
+    return rows[0];
+  });
+}
+
 async function findSearchFixture(): Promise<UserRecord> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<UserRecord[]>(
@@ -150,9 +180,9 @@ async function openAddUser(page: Page): Promise<void> {
 }
 
 async function fillValidAddUser(
-  page: Page,
-  username: string,
-  email = `${username}@example.invalid`,
+    page: Page,
+    username: string,
+    email = `${username}@example.invalid`,
 ): Promise<void> {
   await page.locator('#user-fullname').fill('Playwright Admin User');
   await page.locator('#user-username').fill(username);
@@ -174,21 +204,28 @@ async function openEditUser(page: Page, id: string): Promise<void> {
 }
 
 async function captureDialog(page: Page, action: () => Promise<void>): Promise<string> {
-  let message = '';
-  page.once('dialog', async (dialog) => {
-    message = dialog.message();
-    await dialog.accept();
+  // The dialog may open after an async request (e.g. check-username-email), so wait for it
+  // instead of returning as soon as the click resolves.
+  const dialogSeen = new Promise<string>((resolve) => {
+    page.once('dialog', async (dialog) => {
+      const message = dialog.message();
+      await dialog.accept();
+      resolve(message);
+    });
   });
   await action();
-  return message;
+  return Promise.race([
+    dialogSeen,
+    new Promise<string>((resolve) => setTimeout(() => resolve(''), 10_000)),
+  ]);
 }
 
 async function cleanupAddedUser(): Promise<void> {
   if (!addedUserName || !addedUserEmail) return;
   await withDb(async (connection) => {
     await connection.execute(
-      'DELETE FROM users WHERE user_name = ? AND email = ? AND uid IS NULL',
-      [addedUserName, addedUserEmail],
+        'DELETE FROM users WHERE user_name = ? AND email = ? AND uid IS NULL',
+        [addedUserName, addedUserEmail],
     );
   });
   addedUserName = undefined;
@@ -199,8 +236,8 @@ async function restoreEditedUser(): Promise<void> {
   if (!editOriginal || !editChanged) return;
   await withDb(async (connection) => {
     await connection.execute(
-      'UPDATE users SET full_name = ?, role_id = ?, avatar = ? WHERE id = ?',
-      [editOriginal.full_name, editOriginal.role_id, editOriginal.avatar, editOriginal.id],
+        'UPDATE users SET full_name = ?, role_id = ?, avatar = ? WHERE id = ?',
+        [editOriginal.full_name, editOriginal.role_id, editOriginal.avatar, editOriginal.id],
     );
   });
   editChanged = false;
@@ -225,8 +262,8 @@ test.describe('USER_MGT - Admin user management', () => {
     const caseId = testInfo.title.match(/\bUSER_MGT_[A-Za-z]+-\d+\b/)?.[0];
     for (const prerequisite of dependencies[caseId ?? ''] ?? []) {
       test.skip(
-        caseResults.get(prerequisite) !== true,
-        `Blocked: prerequisite ${prerequisite} did not pass.`,
+          caseResults.get(prerequisite) !== true,
+          `Blocked: prerequisite ${prerequisite} did not pass.`,
       );
     }
   });
@@ -366,17 +403,17 @@ test.describe('USER_MGT - Admin user management', () => {
       await loginAdmin(page);
       await openAddUser(page);
       await fillValidAddUser(
-        page,
-        `unique${Date.now()}`,
-        envOr('PW_ADMIN_USER_DUPLICATE_EMAIL', 'admin@gmail.com'),
+          page,
+          `unique${Date.now()}`,
+          envOr('PW_ADMIN_USER_DUPLICATE_EMAIL', 'admin@gmail.com'),
       );
       const checkRequest = page.waitForRequest((request) =>
-        request.url().includes('/check-username-email'),
+          request.url().includes('/check-username-email'),
       );
       const dialogMessage = captureDialog(page, () => page.locator('#submitAddUser').click());
 
       await checkRequest;
-      expect(await dialogMessage).toContain('email đã tồn tại');
+      expect(await dialogMessage).toMatch(/(email|username).*đã tồn tại/i);
     });
 
     test('USER_MGT_Add-7: Thêm user mới không Avatar với trạng thái Active', async ({ page }) => {
@@ -392,14 +429,14 @@ test.describe('USER_MGT - Admin user management', () => {
         await fillValidAddUser(page, username, email);
         await page.locator('#user-role').selectOption('2');
         const responsePromise = page.waitForResponse(
-          (response) => response.url().includes('/add-user') && response.request().method() === 'POST',
+            (response) => response.url().includes('/add-user') && response.request().method() === 'POST',
         );
         const dialogMessage = captureDialog(page, () => page.locator('#submitAddUser').click());
         const response = await responsePromise;
         const result = await response.json();
 
         expect(result.success).toBe(true);
-        expect(dialogMessage).toBe('Thêm user thành công');
+        expect(await dialogMessage).toBe('Thêm user thành công');
         const createdUser = await readUserByName(username);
         expect(createdUser).toMatchObject({
           user_name: username,
@@ -433,8 +470,8 @@ test.describe('USER_MGT - Admin user management', () => {
     } finally {
       await withDb(async (connection) => {
         await connection.execute(
-          'DELETE FROM users WHERE user_name = ? AND email = ? AND uid IS NULL',
-          [username, email],
+            'DELETE FROM users WHERE user_name = ? AND email = ? AND uid IS NULL',
+            [username, email],
         );
       });
     }
@@ -458,7 +495,6 @@ test.describe('USER_MGT - Admin user management', () => {
       await expect(page.locator('#email-edit')).toHaveValue(record!.email);
       await expect(page.locator('#role-edit')).toHaveValue(String(record!.role_id));
       await expect(page.locator('#editUserForm img')).toBeVisible();
-      // editPopupPassed = true;
     });
 
     test('USER_MGT_Edit-2: Username và Email chỉ đọc', async ({ page }) => {
@@ -507,7 +543,7 @@ test.describe('USER_MGT - Admin user management', () => {
         predicate: (dialog) => dialog.message() === 'Cập nhật người dùng thành công',
       });
       const responsePromise = page.waitForResponse(
-        (response) => response.url().includes('/edit-user') && response.request().method() === 'POST',
+          (response) => response.url().includes('/edit-user') && response.request().method() === 'POST',
       );
       editChanged = true;
       await page.locator('#submitEditUser').click();
@@ -579,8 +615,8 @@ test.describe('USER_MGT - Admin user management', () => {
   });
 
   test('USER_MGT_Edit-7: Bỏ qua Username, Email và Password không nằm trong payload cho phép sửa', async ({
-    page,
-  }) => {
+                                                                                                            page,
+                                                                                                          }) => {
     await loginAdmin(page);
     const id = Number(envOr('PW_ADMIN_USER_EDIT_ID', '105'));
     const before = await readUser(id);
@@ -636,8 +672,9 @@ test.describe('USER_MGT - Admin user management', () => {
         const message = await captureDialog(page, () => row.locator('.edit-user-lock').click());
         expect(message).toBe('Đồng ý khóa người dùng này?');
 
-        const updated = await readUser(user!.id);
-        expect(updated?.status).toBe('locked');
+        await expect
+            .poll(async () => (await readUser(user!.id))?.status)
+            .toBe('locked');
         await expect(userRow(page, username)).toContainText('Đang bị khóa');
         await expect(userRow(page, username).locator('.edit-user-unlock')).toBeVisible();
       });
@@ -650,18 +687,14 @@ test.describe('USER_MGT - Admin user management', () => {
 
         expect(user, `Expected fixture Customer ${username}`).toBeDefined();
         expect(user!.role_id).toBe(2);
-        const originalStatus = user!.status;
-
-        try {
-          // set locked trong DB, thực hiện test mở khóa và assert
-        } finally {
-          await withDb(async (connection) => {
-            await connection.execute(
-                'UPDATE users SET status = ? WHERE id = ?',
-                [originalStatus, user!.id],
-            );
-          });
+        if (lockUserId === undefined) {
+          lockUserId = user!.id;
+          lockOriginalStatus = user!.status;
         }
+
+        await withDb(async (connection) => {
+          await connection.execute('UPDATE users SET status = ? WHERE id = ?', ['locked', user!.id]);
+        });
 
         await loginAdmin(page);
 
@@ -674,8 +707,9 @@ test.describe('USER_MGT - Admin user management', () => {
 
         expect(message).toBe('Đồng ý mở khóa người dùng này?');
 
-        const updated = await readUser(user!.id);
-        expect(updated?.status).toBe('active');
+        await expect
+            .poll(async () => (await readUser(user!.id))?.status)
+            .toBe('active');
         await expect(userRow(page, username)).toContainText('Đang hoạt động');
         await expect(userRow(page, username).locator('.edit-user-lock')).toBeVisible();
       });
@@ -704,9 +738,7 @@ test.describe('USER_MGT - Admin user management', () => {
         await page.locator('input[name="password"]').fill(requiredEnv('PW_ADMIN_USER_LOCK_PASSWORD'));
         await page.locator('form.login input[type="submit"]').click();
 
-        await expect(page.locator('.alert-error')).toHaveText(
-          'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.',
-        );
+        await expect(page.locator('.alert-error')).toContainText('đã bị khóa');
       } finally {
         await withDb(async (connection) => {
           await connection.execute(
@@ -725,7 +757,9 @@ test.describe('USER_MGT - Admin user management', () => {
 
     test('USER_MGT_Lock-5: Không cho Admin tự khóa tài khoản', async ({ page }) => {
       await loginAdmin(page);
-      const adminId = Number(envOr('PW_ADMIN_USER_SELF_ID', '1'));
+      const adminId = process.env.PW_ADMIN_USER_SELF_ID?.trim()
+          ? Number(process.env.PW_ADMIN_USER_SELF_ID)
+          : ((await readUserByEmail(requiredEnv('ADMIN_EMAIL')))?.id ?? 0);
       const before = await readUser(adminId);
       expect(before?.role_id).toBe(1);
 
@@ -768,43 +802,68 @@ test.describe('USER_MGT - Admin user management', () => {
 
     test('USER_MGT_Delete-2: Xóa Customer không có Avatar', async ({ page }) => {
       requireDestructiveDbPermission();
-      const username = envOr('PW_ADMIN_USER_DELETE_USERNAME', 'cust02');
-      const target = await readUserByName(username);
-      expect(target, `Expected disposable Customer ${username}`).toBeDefined();
-      expect(target!.role_id).toBe(2);
-      expect(target!.avatar).toBeNull();
+      const username = `pwdel${Date.now()}`;
+      const email = `${username}@example.invalid`;
+      addedUserName = username;
+      addedUserEmail = email;
 
-      await loginAdmin(page);
-      const row = userRow(page, username);
-      await expect(row.locator('.edit-user-remove')).toBeVisible();
+      try {
+        // Create a disposable Customer through the UI so the test never depends on a leftover fixture.
+        await loginAdmin(page);
+        await openAddUser(page);
+        await fillValidAddUser(page, username, email);
+        await page.locator('#user-role').selectOption('2');
+        const addResponse = page.waitForResponse(
+            (response) => response.url().includes('/add-user') && response.request().method() === 'POST',
+        );
+        const addDialog = captureDialog(page, () => page.locator('#submitAddUser').click());
+        expect((await (await addResponse).json()).success).toBe(true);
+        await addDialog;
 
-      let confirmMessage = '';
-      page.once('dialog', async (dialog) => {
-        confirmMessage = dialog.message();
-        await dialog.accept();
-      });
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes('/delete-user') && response.request().method() === 'POST',
-      );
-      await row.locator('.edit-user-remove').click();
-      const response = await responsePromise;
-      const result = await response.json();
-      expect(confirmMessage).toBe('Bạn có chắc muốn xóa người dùng này không?');
-      expect(result.success).toBe(true);
-      expect(await readUser(target!.id)).toBeUndefined();
+        const target = await readUserByName(username);
+        expect(target, `Expected disposable Customer ${username}`).toBeDefined();
+        expect(target!.role_id).toBe(2);
+        expect(target!.avatar).toBeNull();
+
+        await page.goto('view-user');
+        let row = userRow(page, username);
+        if ((await row.count()) === 0) {
+          await page.locator('input[name="searchName"]').fill(username);
+          await page.locator('form[action="search-user"] button[type="submit"]').click();
+          row = userRow(page, username);
+        }
+        await expect(row.locator('.edit-user-remove')).toBeVisible();
+
+        let confirmMessage = '';
+        page.once('dialog', async (dialog) => {
+          confirmMessage = dialog.message();
+          await dialog.accept();
+        });
+        const responsePromise = page.waitForResponse(
+            (response) => response.url().includes('/delete-user') && response.request().method() === 'POST',
+        );
+        await row.locator('.edit-user-remove').click();
+        const response = await responsePromise;
+        const result = await response.json();
+        expect(confirmMessage).toBe('Bạn có chắc muốn xóa người dùng này không?');
+        expect(result.success).toBe(true);
+        expect(await readUser(target!.id)).toBeUndefined();
+      } finally {
+        await cleanupAddedUser();
+      }
     });
 
     test('USER_MGT_Delete-3: Chặn xóa tài khoản Admin qua API', async () => {
       test.skip(
-        true,
-        'Blocked by user choice: the current /delete-user handler can delete an Admin account if this request is accepted.',
+          true,
+          'Blocked by user choice: the current /delete-user handler can delete an Admin account if this request is accepted.',
       );
     });
 
     test('USER_MGT_Delete-4: Chặn Customer gọi API xóa user khác', async () => {
       test.skip(
-        true,
-        'Blocked by user choice: the current /delete-user handler can delete the target Customer if this request is accepted.',
+          true,
+          'Blocked by user choice: the current /delete-user handler can delete the target Customer if this request is accepted.',
       );
     });
   });

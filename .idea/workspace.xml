@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01d9b504-7b68-4c9f-88f7-d51349efb85e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/admin-shop-management.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/admin-shop-management.spec.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/admin-user-management.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/admin-user-management.spec.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/auth-flow.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Playwright/tests/Group06_23130333_NguyenTrongTin/auth-flow.spec.ts" afterDir="false" />
@@ -49,27 +50,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "database.data.extractors.current.export.id": "Comma-separated (CSV)_id",
-    "database.data.extractors.current.id": "Comma-separated (CSV)_id",
-    "git-widget-placeholder": "23130333__NguyenTrongTin",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/nam_4/Kiểm thử/test_pkcn_v2/Playwright/tests/Group06_23130333_NguyenTrongTin",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "D:\\intellij download\\IntelliJ IDEA 2025.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;Comma-separated (CSV)_id&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;23130333__NguyenTrongTin&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/nam_4/Kiểm thử/test_pkcn_v2/Playwright/tests/Group06_23130333_NguyenTrongTin&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;D:\\intellij download\\IntelliJ IDEA 2025.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\nam_4\Kiểm thử\test_pkcn_v2\Playwright\tests\Group06_23130333_NguyenTrongTin" />
@@ -113,7 +114,8 @@
       <workItem from="1793819912417" duration="2487000" />
       <workItem from="1793822431826" duration="318000" />
       <workItem from="1793823084431" duration="2608000" />
-      <workItem from="1793826299173" duration="7158000" />
+      <workItem from="1793826299173" duration="7662000" />
+      <workItem from="1793837518228" duration="2373000" />
     </task>
     <servers />
   </component>
