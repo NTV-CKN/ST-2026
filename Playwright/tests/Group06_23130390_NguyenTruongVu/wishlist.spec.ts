@@ -15,6 +15,9 @@ function requiredEnv(name: string): string {
 const BASE_URL = requiredEnv('BASE_URL');
 const USER_PASSWORD = requiredEnv('USER_PASSWORD');
 const USER_EMAIL = requiredEnv('USER_EMAIL');
+const WISHLIST_USER5_EMAIL = requiredEnv('PW_WISHLIST_USER5_EMAIL');
+const WISHLIST_USER6_EMAIL = requiredEnv('PW_WISHLIST_USER6_EMAIL');
+const WISHLIST_USER7_EMAIL = requiredEnv('PW_WISHLIST_USER7_EMAIL');
 
 function appUrl(path: string): string {
   const base = new URL(BASE_URL);
@@ -70,7 +73,7 @@ async function createUser5Session(browser: Browser): Promise<{
 }> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await login(page, 'wl_user5@test.local', USER_PASSWORD);
+  await login(page, WISHLIST_USER5_EMAIL, USER_PASSWORD);
   return { context, page };
 }
 
@@ -267,7 +270,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
 
     test('[WISHLIST_Add-3] Kiểm tra điều hướng quay lại trang sản phẩm sau khi Guest đăng nhập', async () => {
       blockIfPrerequisiteFailed('WISHLIST_Add-3');
-      await login(sharedPage, 'wl_user5@test.local', USER_PASSWORD);
+      await login(sharedPage, WISHLIST_USER5_EMAIL, USER_PASSWORD);
       await expect(sharedPage).toHaveURL(/\/product-detail\?id=101$/);
     });
   });
@@ -535,7 +538,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
       const context = await browser.newContext();
       try {
         const page = await context.newPage();
-        await login(page, 'wl_user6@test.local', USER_PASSWORD);
+        await login(page, WISHLIST_USER6_EMAIL, USER_PASSWORD);
         await page.goto(appUrl('wishlist'));
         const card = productCard(page, 217);
         await expect(card).toBeVisible();
@@ -555,7 +558,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
       const context = await browser.newContext();
       try {
         const page = await context.newPage();
-        await login(page, 'wl_user7@test.local', USER_PASSWORD);
+        await login(page, WISHLIST_USER7_EMAIL, USER_PASSWORD);
         await page.goto(appUrl('wishlist'));
         const card = productCard(page, 102);
         await expect(card).toBeVisible();

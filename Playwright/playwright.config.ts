@@ -1,6 +1,11 @@
 import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
 
+const baseURL = process.env.BASE_URL?.trim();
+if (!baseURL) {
+  throw new Error('Missing required environment variable: BASE_URL');
+}
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false, // Chạy tuần tự để tránh xung đột dữ liệu Admin
@@ -13,7 +18,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: 'http://localhost:8080/pkcn/',
+    baseURL: baseURL.endsWith('/') ? baseURL : `${baseURL}/`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

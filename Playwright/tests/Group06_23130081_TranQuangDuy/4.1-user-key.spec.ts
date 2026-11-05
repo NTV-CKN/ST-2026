@@ -11,7 +11,10 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 
 const fs = require('node:fs');
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
+const BASE_URL = process.env.BASE_URL?.trim();
+if (!BASE_URL) {
+  throw new Error('Missing required environment variable: BASE_URL');
+}
 const { storageStateFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
 const seed = require('../phu_kien_cong_nghe/playwright/support/seed');
 const CONTEXT_OPTIONS = {
