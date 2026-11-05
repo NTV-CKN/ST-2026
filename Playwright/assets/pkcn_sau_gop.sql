@@ -2082,34 +2082,86 @@ INSERT INTO wishlists (id, user_id, product_id, created_at) VALUES
    -- Test phá hủy dữ liệu: ARTICLE_MGT_Delete-1 (chỉ bấm Hủy), AdminComm-4, WISHLIST_DB-2, DB-3 (xóa sản phẩm 101 thật).
       Sau khi chạy xong: import lại CHÍNH file này (đã gồm dữ liệu seed). */
 
--- =============================================================================
--- 5. BỔ SUNG SEED CHO CÁC CHỨC NĂNG CỦA THÀNH VIÊN KHÁC (chưa chạy trên MySQL thật)
---    Giá trị đánh dấu [GIẢ ĐỊNH] suy ra từ báo cáo phân tích seed, cần đối chiếu
---    với cột Tiền điều kiện/Dữ liệu trong test case của từng người trước khi dùng.
--- =============================================================================
+-- ============================================================
+-- BỔ SUNG DỮ LIỆU CHO CÁC CHỨC NĂNG CỦA THÀNH VIÊN KHÁC
+-- (chưa chạy trên MySQL thật; đã kiểm tra tĩnh khóa/cột/ràng buộc)
+-- ============================================================
 
--- 5.1 ADM_SHOP_* (Tin): shop ID 5 "Chi nhánh Cầu Giấy" SĐT 0901234567 và shop ID 3,
---     cả hai ở trạng thái inactive (status = 0)  [GIẢ ĐỊNH: tên/địa chỉ/hotline/status của shop 3]
-INSERT INTO contact_shops
-  (id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
-   facebook_url, instagram_url, img_url, status)
+-- ------------------------------------------------------------
+-- A. Đơn hàng ADMIN_ORDER (Toàn): user 34, địa chỉ user 33, đơn 29
+-- ------------------------------------------------------------
+INSERT INTO `users` (`id`, `uid`, `folder_id`, `role_id`, `full_name`, `user_name`, `email`, `password`, `status`, `avatar`)
+VALUES (34, NULL, NULL, 2, 'USER', 'USER3', 'qtoan5591@gmail.com', '6fd89c7284a217867089c904399ad6cb', 'active', NULL);
+-- [ĐÃ SỬA] mật khẩu gốc có ký tự thừa "(" ở cuối hash; đã bỏ để đúng hash 32 ký tự.
+
+INSERT INTO `user_address` (`id`, `user_id`, `phone_number`, `address_detail`, `province_city`, `district`, `is_selected`, `receiver_name`) VALUES
+(24, 33, '0353334530', 'măng đen', 'Đắk Lắk', NULL, 1, 'Ten'),
+(26, 33, '', '', '', NULL, 0, '');
+-- [ĐÃ SỬA] dòng 26 gốc để NULL ở các cột NOT NULL (phone_number, address_detail,
+-- province_city, receiver_name) nên MySQL báo lỗi; đã đổi thành chuỗi rỗng.
+
+-- [BỔ SUNG] đơn 29 tham chiếu address_order_id = 30 nhưng bảng chưa có dòng này
+-- (FK RESTRICT sẽ báo lỗi), nên thêm địa chỉ đơn hàng 30. [GIẢ ĐỊNH: nội dung địa chỉ]
+INSERT INTO `address_order` (`id`, `phone_number`, `address_detail`, `province_city`, `district`, `receiver_name`, `note`)
+VALUES (30, '0353334530', 'măng đen', 'Đắk Lắk', '', 'Ten', '');
+
+INSERT INTO `orders` (
+    `id`, `user_id`, `payment_method_snapshot`, `address_order_id`, `status_order`,
+    `total_must_pay`, `order_date`, `delivery_date`, `shipping_fee`, `voucher_id`,
+    `voucher_code_snapshot`, `discount_amount`, `note`, `signature`, `user_key_id`, `expire_sign_key`
+) VALUES (
+    29, 34, 'Thanh toán khi nhận hàng', 30, 'pending_signature',
+    4680000.00, '2026-11-01 14:44:20', '2026-11-04 14:44:20', 50000.00, NULL,
+    NULL, 0.00, NULL, NULL, NULL, '2026-11-03 14:44:20'
+);
+
+-- ------------------------------------------------------------
+-- B. USER_MGT (Tin): dữ liệu quản lý user
+-- ------------------------------------------------------------
+-- [ĐÃ SỬA] tên cột `username` -> `user_name` cho đúng schema.
+-- [ĐÃ SỬA] user 106: email gốc 'admin@gmail.com' trùng user 32 (email UNIQUE) nên
+-- không chèn được; đổi thành 'testadmin@gmail.com'. Case trùng email vẫn dùng được
+-- admin@gmail.com (user 32); case trùng username dùng 'testadmin'.
+INSERT INTO `users` (`id`, `role_id`, `full_name`, `user_name`, `email`, `password`, `status`, `avatar`) VALUES
+-- 1. Main Admin (đăng nhập UI test full luồng)
+(100, 1, 'Nguyễn Quản Trị', 'admin_tester', 'admin.test@gmail.com', 'efeef922fa3d69c82d8a65ef53a39647', 'active', NULL),
+-- 2. Secondary Admin ([USER_MGT_Lock-6], [USER_MGT_Delete-3]: chặn khóa/xóa Admin)
+(101, 1, 'Trần Quản Lý Phụ', 'admin_sub_test', 'admin.sub@gmail.com', '6fd89c7284a217867089c904399ad6cb', 'active', NULL),
+-- 3. Target User ID = 105 ([USER_MGT_Edit-1] -> [USER_MGT_Edit-7])
+(105, 2, 'Nguyễn Văn A', 'cust_edit_105', 'cust105@gmail.com', '91ea09fc5fda183d73b53d49729bd51f', 'active', NULL),
+-- 4. Duplicate Check User ([USER_MGT_Add-6]: kiểm tra trùng username/email)
+(106, 2, 'Lê Văn Trùng', 'testadmin', 'testadmin@gmail.com', '20ecbea4207ecd624d2b80e07075336b', 'active', NULL),
+-- 5. Customer Active ([USER_MGT_Lock-2])
+(201, 2, 'Phạm Khách Active', 'cust_active_201', 'cust201.active@gmail.com', 'ac40677503c4d01c843820f3432b4823', 'active', NULL),
+-- 6. Customer Locked ([USER_MGT_Lock-3] mở khóa, [USER_MGT_Lock-4] chặn đăng nhập)
+(202, 2, 'Hoàng Khách Locked', 'cust_locked_202', 'cust202.locked@gmail.com', '0e7517141fb53f21ee439b355b5a1d0a', 'locked', NULL),
+-- 7. Customer No Avatar ([USER_MGT_Delete-2])
+(301, 2, 'Vũ Khách Xóa', 'cust_delete_301', 'cust301.delete@gmail.com', '0e7517141fb53f21ee439b355b5a1d0a', 'active', NULL),
+-- 8. Dữ liệu tìm kiếm/lọc ([USER_MGT_List-2])
+(302, 2, 'Đặng Minh Đức', 'duc_dang302', 'duc.dang@gmail.com', '0e7517141fb53f21ee439b355b5a1d0a', 'active', NULL),
+(303, 2, 'Bùi Thị Hà', 'ha_bui303', 'ha.bui@gmail.com', '0e7517141fb53f21ee439b355b5a1d0a', 'locked', NULL);
+
+-- ------------------------------------------------------------
+-- C. ADM_SHOP (Tin): thay toàn bộ dữ liệu bảng contact_shops
+-- ------------------------------------------------------------
+-- [ĐÃ SỬA] shop ID 1 đã có sẵn trong dump nên xóa trước để không trùng khóa chính.
+-- [ĐÃ SỬA] cột img_url là NOT NULL không có giá trị mặc định nên bổ sung (dùng logo
+-- của shop 1 trong dump gốc); cột status lấy mặc định 1 (hoạt động).
+DELETE FROM `contact_shops` WHERE `id` = 1;
+INSERT INTO `contact_shops`
+(`id`, `shop_name`, `shop_address`, `shop_phone_number`, `shop_hotline`, `shop_email`, `facebook_url`, `instagram_url`, `img_url`, `status`)
 VALUES
-  (3, 'PW Seed Delete', 'Test address', '0900000003', '1900000003', NULL, NULL, NULL,
-   'https://example.invalid/shop.png', 0),
-  (5, 'Chi nhánh Cầu Giấy', 'Cầu Giấy, Hà Nội', '0901234567', '1901234567', NULL, NULL, NULL,
-   'https://example.invalid/shop.png', 0);
-
--- 5.2 ADMIN_ORDER_Create* (Toàn): địa chỉ nhận hàng cho customer user 33 (user@gmail.com)
---     [GIẢ ĐỊNH: customer được chọn khi tạo đơn là user 33]
-INSERT INTO user_address
-  (id, user_id, phone_number, address_detail, province_city, district, is_selected, receiver_name)
-VALUES
-  (23, 33, '0900000033', '123 Đường Test', 'TP. Hồ Chí Minh', 'Thủ Đức', 1, 'USER');
-
--- 5.3 USER_MGT_* (Tin): CHƯA điền, vì chưa biết ánh xạ ID <-> user_name/email/role và
---     chuỗi status của user bị khóa (trong dữ liệu chỉ có status = 'active').
---     Tin điền từ test case rồi bỏ dấu comment. Mật khẩu dùng chung hash của user@gmail.com.
--- INSERT INTO users (id, uid, folder_id, role_id, full_name, user_name, email, password, status, avatar) VALUES
---   (<id>, NULL, NULL, <role_id: 1=ADMIN, 2=CUSTOMER, 3=STAFF>, '<họ tên>', '<user_name, tối đa 30 ký tự>',
---    '<email>', '6fd89c7284a217867089c904399ad6cb', '<active hoặc chuỗi trạng thái khóa>', NULL);
--- Cần: ID 105, ID 2, cust01, cust02, admin_2 (ID 3, 4 và từ 14 trở đi đang trống; 5-13 đã dùng cho Wishlist).
+-- 1. Trụ sở chính (hiển thị danh sách & cập nhật thông tin)
+(1, 'Phụ Kiện Công Nghệ - Trụ Sở Chính', 'Đại Học Nông Lâm, TP.HCM', '0793189034', '0232323889', 'pkcn.sp@gmail.com', 'https://facebook.com/phukiencongnghe', 'https://instagram.com/phukiencongnghe', 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 2. Chi nhánh Tân Bình ([ADM_SHOP_SRCH-01]: tìm chính xác ID 5 hoặc SĐT 0901234567)
+(5, 'Chi Nhánh Tân Bình', '12 Cộng Hòa, Phường 4, Q. Tân Bình, TP.HCM', '0901234567', '19005555', 'tanbinh@pkcn.com', NULL, NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 3. Chi nhánh Cầu Giấy ([ADM_SHOP_SRCH-02]: tìm tương đối "Cầu Giấy")
+(6, 'Chi Nhánh Cầu Giấy', '101 Cầu Giấy, Phường Quan Hoa, Hà Nội', '0906666666', '19006666', 'caugiay@pkcn.com', 'https://facebook.com/pkcn.caugiay', NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 4. Chi nhánh Thủ Đức ([ADM_SHOP_DEL-03]: xóa shop ID 3)
+(3, 'Chi Nhánh Thủ Đức (Shop Test Xóa)', '789 Võ Văn Ngân, TP. Thủ Đức, TP.HCM', '0903333333', '19003333', NULL, NULL, NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 5. Chi nhánh Quận 3 ([ADM_SHOP_EDIT-03], [ADM_SHOP_EDIT-04])
+(2, 'Chi Nhánh Quận 3', '456 Lê Văn Sỹ, Q. 3, TP.HCM', '0902222222', '19002222', 'q3@pkcn.com', NULL, NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 6. Test Security XSS ([ADM_SHOP_SEC-02])
+(10, '<script>alert("XSS_Test")</script>', 'Playwright address XSS Test', '0929999999', '1929999999', NULL, NULL, NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
+-- 7. Test link MXH ([ADM_SHOP_SEC-01])
+(11, 'Chi Nhánh Đà Nẵng', '50 Nguyễn Văn Linh, Đà Nẵng', '0908888888', '19008888', 'danang@pkcn.com', 'https://facebook.com/pkcn.danang', 'https://instagram.com/pkcn.danang', 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1);

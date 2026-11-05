@@ -18,9 +18,9 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 }
 
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const seedData = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { credentialsFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
+const { BASE_URL } = require('./support/config');
+const seedData = require('./support/seed');
+const { credentialsFor } = require('./support/auth');
 const appBase = new URL(BASE_URL);
 appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
 appBase.search = '';
@@ -89,9 +89,9 @@ const test = base.test.extend({
   },
 });
 const expect = base.expect;
-const { PaymentPage } = require('../phu_kien_cong_nghe/playwright/pages/PaymentPage');
-const appHelpers = require('../phu_kien_cong_nghe/playwright/support/app');
-const { exec } = require('../phu_kien_cong_nghe/playwright/support/db');
+const { PaymentPage } = require('./pages/PaymentPage');
+const appHelpers = require('./support/app');
+const { exec } = require('./support/db');
 function appRequest(request) {
   return new Proxy(request, {
     get(target, property) {
@@ -116,9 +116,9 @@ const app = new Proxy(appHelpers, {
     return helper;
   },
 });
-const orders = require('../phu_kien_cong_nghe/playwright/support/orders');
-const { seedBaseData, loadSeed, setVariantStock } = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { one } = require('../phu_kien_cong_nghe/playwright/support/db');
+const orders = require('./support/orders');
+const { seedBaseData, loadSeed, setVariantStock } = require('./support/seed');
+const { one } = require('./support/db');
 
 function requireDestructiveDbPermission() {
   const database = process.env.DB_NAME;

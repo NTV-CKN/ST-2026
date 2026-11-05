@@ -20,9 +20,9 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const seedData = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { credentialsFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
+const { BASE_URL } = require('./support/config');
+const seedData = require('./support/seed');
+const { credentialsFor } = require('./support/auth');
 const appBase = new URL(BASE_URL);
 appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
 appBase.search = '';
@@ -91,11 +91,11 @@ const test = base.test.extend({
   },
 });
 const expect = base.expect;
-const { SignOrderPage } = require('../phu_kien_cong_nghe/playwright/pages/SignOrderPage');
-const { OrderHistoryPage } = require('../phu_kien_cong_nghe/playwright/pages/OrderHistoryPage');
-const keys = require('../phu_kien_cong_nghe/playwright/support/keys');
-const orders = require('../phu_kien_cong_nghe/playwright/support/orders');
-const appHelpers = require('../phu_kien_cong_nghe/playwright/support/app');
+const { SignOrderPage } = require('./pages/SignOrderPage');
+const { OrderHistoryPage } = require('./pages/OrderHistoryPage');
+const keys = require('./support/keys');
+const orders = require('./support/orders');
+const appHelpers = require('./support/app');
 function appRequest(request) {
   return new Proxy(request, {
     get(target, property) {
@@ -120,9 +120,9 @@ const app = new Proxy(appHelpers, {
     return helper;
   },
 });
-const { seedBaseData, loadSeed, restoreStock } = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { exec, one } = require('../phu_kien_cong_nghe/playwright/support/db');
-const { ADMIN } = require('../phu_kien_cong_nghe/playwright/support/config');
+const { seedBaseData, loadSeed, restoreStock } = require('./support/seed');
+const { exec, one } = require('./support/db');
+const { ADMIN } = require('./support/config');
 
 function requireDestructiveDbPermission() {
   const database = process.env.DB_NAME;

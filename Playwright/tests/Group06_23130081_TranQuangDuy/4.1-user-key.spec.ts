@@ -19,9 +19,9 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 
 const fs = require('node:fs');
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const seed = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { credentialsFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
+const { BASE_URL } = require('./support/config');
+const seed = require('./support/seed');
+const { credentialsFor } = require('./support/auth');
 const appBase = new URL(BASE_URL);
 appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
 appBase.search = '';
@@ -90,12 +90,12 @@ const test = base.test.extend({
   },
 });
 const expect = base.expect;
-const { UserKeyPage } = require('../phu_kien_cong_nghe/playwright/pages/UserKeyPage');
-const keys = require('../phu_kien_cong_nghe/playwright/support/keys');
-const { exec, one, query } = require('../phu_kien_cong_nghe/playwright/support/db');
-const { watchDialogs, withSlowGuard } = require('../phu_kien_cong_nghe/playwright/support/app');
-const { seedBaseData, loadSeed, USERS } = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { ADMIN, SLOW_CALL_TIMEOUT_MS } = require('../phu_kien_cong_nghe/playwright/support/config');
+const { UserKeyPage } = require('./pages/UserKeyPage');
+const keys = require('./support/keys');
+const { exec, one, query } = require('./support/db');
+const { watchDialogs, withSlowGuard } = require('./support/app');
+const { seedBaseData, loadSeed, USERS } = require('./support/seed');
+const { ADMIN, SLOW_CALL_TIMEOUT_MS } = require('./support/config');
 
 function requireDestructiveDbPermission() {
   const database = process.env.DB_NAME;
