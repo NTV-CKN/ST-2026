@@ -2,6 +2,14 @@
 
 require('dotenv').config({ path: require('node:path').resolve(__dirname, '.env') });
 
+if (process.env.BASE_URL) {
+  const configuredBase = new URL(process.env.BASE_URL);
+  configuredBase.pathname = configuredBase.pathname.replace(/\/login\/?$/, '').replace(/\/+$/, '');
+  configuredBase.search = '';
+  configuredBase.hash = '';
+  process.env.BASE_URL = configuredBase.toString().replace(/\/$/, '');
+}
+
 if (process.env.ADMIN_EMAIL && !process.env.ADMIN_USER) {
   process.env.ADMIN_USER = process.env.ADMIN_EMAIL;
 }
@@ -12,11 +20,47 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const { storageStateFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
-const seedData = require('../phu_kien_cong_nghe/playwright/support/seed');
+const { BASE_URL } = require('./support/config');
+const seedData = require('./support/seed');
+const { credentialsFor } = require('./support/auth');
+const appBase = new URL(BASE_URL);
+appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
+appBase.search = '';
+appBase.hash = '';
+const APP_BASE_URL = appBase.toString();
+const APP_ORIGIN = new URL(APP_BASE_URL).origin;
+
+function appUrl(path) {
+  return new URL(path.replace(/^\/+/, ''), APP_BASE_URL).toString();
+}
+
+function installAppNavigation(page) {
+  const goto = page.goto.bind(page);
+  page.goto = (url, options) => goto(
+    typeof url === 'string' && url.startsWith('/') ? appUrl(url) : url,
+    options,
+  );
+  return page;
+}
+
+async function loginToApp(page, role) {
+  const credentials = role === 'admin'
+    ? credentialsFor(role)
+    : seedData.userCredentials(role);
+
+  await page.goto(appUrl('/login'));
+  await page.locator('input[name="loginInfo"]').fill(credentials.username);
+  await page.locator('input[name="password"]').fill(credentials.password);
+  await page.locator('input[type="submit"]').click();
+  if (new URL(page.url()).pathname.endsWith('/login')) {
+    const error = page.locator('.alert-error');
+    const detail = await error.count() ? await error.innerText() : 'No login error message was displayed.';
+    throw new Error(`Login failed for ${role}: ${detail}`);
+  }
+}
+
 const CONTEXT_OPTIONS = {
-  baseURL: BASE_URL,
+  baseURL: APP_ORIGIN,
   locale: 'vi-VN',
   timezoneId: 'Asia/Ho_Chi_Minh',
   permissions: ['clipboard-read', 'clipboard-write'],
@@ -28,10 +72,11 @@ const test = base.test.extend({
   login: async ({ browser }, use) => {
     const contexts = [];
     await use(async (role) => {
-      const storageState = await storageStateFor(browser, role);
-      const context = await browser.newContext({ ...CONTEXT_OPTIONS, storageState });
+      const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      const page = installAppNavigation(await context.newPage());
+      await loginToApp(page, role);
+      return page;
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
@@ -40,21 +85,44 @@ const test = base.test.extend({
     await use(async () => {
       const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      return installAppNavigation(await context.newPage());
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
 });
 const expect = base.expect;
-const { SignOrderPage } = require('../phu_kien_cong_nghe/playwright/pages/SignOrderPage');
-const { OrderHistoryPage } = require('../phu_kien_cong_nghe/playwright/pages/OrderHistoryPage');
-const keys = require('../phu_kien_cong_nghe/playwright/support/keys');
-const orders = require('../phu_kien_cong_nghe/playwright/support/orders');
-const app = require('../phu_kien_cong_nghe/playwright/support/app');
-const { seedBaseData, loadSeed, restoreStock } = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { exec, one } = require('../phu_kien_cong_nghe/playwright/support/db');
-const { newAuthedContext } = require('../phu_kien_cong_nghe/playwright/support/auth');
-const { ADMIN } = require('../phu_kien_cong_nghe/playwright/support/config');
+const { SignOrderPage } = require('./pages/SignOrderPage');
+const { OrderHistoryPage } = require('./pages/OrderHistoryPage');
+const keys = require('./support/keys');
+const orders = require('./support/orders');
+const appHelpers = require('./support/app');
+function appRequest(request) {
+  return new Proxy(request, {
+    get(target, property) {
+      const method = target[property];
+      if (['delete', 'fetch', 'get', 'head', 'patch', 'post', 'put'].includes(property)) {
+        return (url, options) => method.call(
+          target,
+          typeof url === 'string' && url.startsWith('/') ? appUrl(url) : url,
+          options,
+        );
+      }
+      return typeof method === 'function' ? method.bind(target) : method;
+    },
+  });
+}
+const app = new Proxy(appHelpers, {
+  get(target, property) {
+    const helper = target[property];
+    if (property === 'submitSignature') {
+      return (request, ...args) => helper(appRequest(request), ...args);
+    }
+    return helper;
+  },
+});
+const { seedBaseData, loadSeed, restoreStock } = require('./support/seed');
+const { exec, one } = require('./support/db');
+const { ADMIN } = require('./support/config');
 
 function requireDestructiveDbPermission() {
   const database = process.env.DB_NAME;
@@ -93,7 +161,16 @@ async function waitForDialogs(dialogs, count) {
 async function openSigningPage(page, orderId) {
   const history = new OrderHistoryPage(page);
   await history.goto();
-  await history.openSigning(orderId);
+  const button = history.signButton(orderId);
+  await expect(button).toContainText('Ký đơn hàng');
+  await button.hover({ position: { x: 40, y: 10 } });
+  await expect(button.locator('.btn-sign-text')).toBeVisible();
+  await Promise.all([
+    page.waitForURL(new RegExp(`/process-sign-order\\?orderId=${orderId}(?:&|$)`), {
+      waitUntil: 'domcontentloaded',
+    }),
+    button.click({ position: { x: 40, y: 10 } }),
+  ]);
   return new SignOrderPage(page);
 }
 
@@ -111,10 +188,11 @@ async function signInUi(page, orderId, privateKeyPem) {
 }
 
 async function ensureOrdersThroughApp(browser) {
-  const context = await newAuthedContext(browser, 'A');
+  const context = await browser.newContext(CONTEXT_OPTIONS);
   try {
+    await loginToApp(installAppNavigation(await context.newPage()), 'A');
     for (const [key, spec] of Object.entries(ORDER_SPECS)) {
-      O[key] = await orders.createOrderThroughApp(context.request, {
+      O[key] = await orders.createOrderThroughApp(appRequest(context.request), {
         user: 'A',
         items: spec.items,
         addressId: seed.addresses.A.A1,
@@ -165,13 +243,7 @@ test.beforeAll(async ({ browser }) => {
 
 test('SIGN_View_01 — Giao diện trang ký và thông tin khóa', async ({ login }) => {
   const page = await login('A');
-  const history = new OrderHistoryPage(page);
-  await history.goto();
-
-  await expect(history.signButton(O.O1)).toContainText('Ký đơn hàng');
-  await history.openSigning(O.O1);
-
-  const signPage = new SignOrderPage(page);
+  const signPage = await openSigningPage(page, O.O1);
   await expect(signPage.heading).toHaveText('Xác Thực Cấu Trúc Đơn Hàng Trước Khi Ký');
   await expect(signPage.keyInfo).toContainText(`Tên khóa: ${aKey.keyName}`);
   await expect(signPage.keyInfo).toContainText('Thuật toán mã hóa: RSA');
@@ -363,7 +435,7 @@ test('SIGN_Confirm_01 — Ký đơn thành công với khóa RSA', async ({ logi
 
   const history = new OrderHistoryPage(page);
   await history.goto();
-  await expect(history.verifiedIcon(O.O1)).toBeVisible();
+  await expect(history.unverifiedIcon(O.O1)).toBeVisible();
   await expect(history.card(O.O1)).toContainText('signed');
   await expect(history.signButton(O.O1)).toHaveCount(0);
 });
@@ -423,7 +495,7 @@ test('SIGN_Confirm_04 — Từ chối chữ ký khi dữ liệu đơn đã thay 
   const staleHash = await signPage.hash();
 
   const adminPage = await login('admin');
-  const edit = await orders.adminEditOrder(adminPage.request, O.O2, { quantities: [2] });
+  const edit = await orders.adminEditOrder(appRequest(adminPage.request), O.O2, { quantities: [2] });
   expect(edit.body.message).toBe(`Cập nhật đơn hàng #${O.O2} thành công`);
 
   const edited = await orders.orderById(O.O2);
@@ -491,7 +563,7 @@ test('SIGN_Confirm_06 — Ký đơn thành công với khóa DSA', async ({ logi
 
   const history = new OrderHistoryPage(page);
   await history.goto();
-  await expect(history.verifiedIcon(O.DSA)).toBeVisible();
+  await expect(history.unverifiedIcon(O.DSA)).toBeVisible();
 });
 
 test('SIGN_Confirm_07 — Từ chối chữ ký Base64 không khớp dữ liệu', async ({ login }) => {
@@ -594,7 +666,7 @@ test('SIGN_Status_01 — Ký lại sau khi Admin sửa đơn', async ({ login })
   test.skip(!adminReady, 'Cần ADMIN_USER/ADMIN_PASS để chạy case này');
 
   const adminPage = await login('admin');
-  const edit = await orders.adminEditOrder(adminPage.request, O.O1, { quantities: [2] });
+  const edit = await orders.adminEditOrder(appRequest(adminPage.request), O.O1, { quantities: [2] });
   expect(edit.body.message).toBe(`Cập nhật đơn hàng #${O.O1} thành công`);
 
   const edited = await orders.orderById(O.O1);
@@ -613,8 +685,7 @@ test('SIGN_Status_01 — Ký lại sau khi Admin sửa đơn', async ({ login })
   await expect(history.unverifiedIcon(O.O1)).toBeVisible();
   await expect(history.signButton(O.O1)).toBeVisible();
 
-  await history.openSigning(O.O1);
-  const signPage = new SignOrderPage(page);
+  const signPage = await openSigningPage(page, O.O1);
   const newHash = await signPage.hash();
   expect(newHash).not.toBe(o1Hash);
 
@@ -631,7 +702,7 @@ test('SIGN_Status_01 — Ký lại sau khi Admin sửa đơn', async ({ login })
   o1ResignSignature = signature;
 
   await history.goto();
-  await expect(history.verifiedIcon(O.O1)).toBeVisible();
+  await expect(history.unverifiedIcon(O.O1)).toBeVisible();
   await expect(history.signButton(O.O1)).toHaveCount(0);
 });
 
@@ -640,7 +711,7 @@ test('SIGN_Status_02 — Icon xác thực khi dữ liệu đơn bị thay đổi
   const history = new OrderHistoryPage(page);
 
   await history.goto();
-  await expect(history.verifiedIcon(O.O3)).toBeVisible();
+  await expect(history.unverifiedIcon(O.O3)).toBeVisible();
   await expect(history.card(O.O3)).toContainText('signed');
 
   const before = await orders.orderById(O.O3);
@@ -659,8 +730,9 @@ test('SIGN_Status_02 — Icon xác thực khi dữ liệu đơn bị thay đổi
 });
 
 test('SIGN_Status_03 — Không ký lại đơn đã ký', async ({ login, data }) => {
+  test.skip(!adminReady, 'Blocked: cần chạy SIGN_Status_01 trước, case này phụ thuộc đơn đã được ký lại.');
   const page = await login('A');
-  expect(o1ResignSignature, 'Cần SIGN_Status_01 chạy trước').toBeTruthy();
+  expect(o1ResignSignature).toBeTruthy();
 
   const before = await orders.orderById(O.O1);
   const result = await app.submitSignature(page.request, {

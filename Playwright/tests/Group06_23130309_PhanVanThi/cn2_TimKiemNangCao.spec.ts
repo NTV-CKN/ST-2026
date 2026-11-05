@@ -1,8 +1,22 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
-const BASE = 'http://localhost:8080';
+const BASE_URL = requiredEnv('BASE_URL');
 const TU_KHOA = 'chuột';
 const TU_KHOA_FIXTURE = 'mạng';
+
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+function appUrl(path: string): string {
+  const base = new URL(BASE_URL);
+  base.pathname = `${base.pathname.replace(/\/+$/, '')}/`;
+  return new URL(path.replace(/^\/+/, ''), base).toString();
+}
 
 // thông báo khi không có sản phẩm nào phù hợp
 const THONG_BAO_KHONG_CO = /không tìm thấy|không có sản phẩm|không có kết quả/i;
@@ -92,7 +106,7 @@ async function chonOption(select: Locator, nhan: string): Promise<void> {
 
 // nhập từ khóa vào ô tìm kiếm và nhấn tìm kiếm (bước đầu tiên dùng chung cho các test case)
 async function timKiem(page: Page, tuKhoa: string): Promise<void> {
-  const response = await page.goto(`${BASE}/`);
+  const response = await page.goto(appUrl(''));
   expect(response?.ok(), `Trang chủ trả về HTTP ${response?.status() ?? 'không có phản hồi'}`).toBe(true);
   const oTim = page.getByPlaceholder('Tìm kiếm sản phẩm...');
   await oTim.fill(tuKhoa);

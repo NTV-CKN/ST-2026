@@ -1,0 +1,59 @@
+{
+  "users": {
+    "A": 304,
+    "B": 305,
+    "C": 306,
+    "D": 307,
+    "E": 308,
+    "F": 309
+  },
+  "addresses": {
+    "A": {
+      "A1": 42,
+      "A2": 43
+    },
+    "B": {
+      "B1": 44
+    },
+    "D": {
+      "D1": 45
+    },
+    "E": {
+      "E1": 46
+    }
+  },
+  "products": {
+    "A": {
+      "productId": 218,
+      "variantId": 265,
+      "name": "SP_A",
+      "price": 100000
+    },
+    "B": {
+      "productId": 219,
+      "variantId": 266,
+      "name": "SP_B",
+      "price": 250000
+    },
+    "C": {
+      "productId": 220,
+      "variantId": 267,
+      "name": "SP_C",
+      "price": 150000
+    },
+    "D": {
+      "productId": 221,
+      "variantId": 268,
+      "name": "SP_D",
+      "price": 200000
+    },
+    "E": {
+      "productId": 222,
+      "variantId": 269,
+      "name": "SP_E",
+      "price": 100000
+    }
+  },
+  "password": "Pw@12345",
+  "marker": "PW_SEED"
+}

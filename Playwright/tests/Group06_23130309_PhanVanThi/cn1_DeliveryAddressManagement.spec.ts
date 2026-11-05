@@ -1,7 +1,24 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
-const BASE = 'http://localhost:8080';
-const TRANG_DIA_CHI = `${BASE}/address-user`;
+const BASE_URL = requiredEnv('BASE_URL');
+const USER_EMAIL = requiredEnv('USER_EMAIL');
+const USER_PASSWORD = requiredEnv('USER_PASSWORD');
+
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+function appUrl(path: string): string {
+  const base = new URL(BASE_URL);
+  base.pathname = `${base.pathname.replace(/\/+$/, '')}/`;
+  return new URL(path.replace(/^\/+/, ''), base).toString();
+}
+
+const TRANG_DIA_CHI = appUrl('address-user');
 
 // Thông báo
 const THONG_BAO_BAT_BUOC = /bắt buộc|vui lòng nhập/i;
@@ -105,10 +122,10 @@ async function demDong(page: Page): Promise<number> {
 
 test.beforeEach(async ({ page }) => {
   clear.length = 0;
-  await page.goto(`${BASE}/`);
+  await page.goto(appUrl(''));
   await page.getByRole('link', { name: 'Đăng nhập' }).click();
-  await page.getByRole('textbox', { name: 'Tên đăng nhập hoặc email' }).fill('user@gmail.com');
-  await page.getByRole('textbox', { name: 'Mật khẩu' }).fill(process.env.TEST_PASSWORD ?? 'vudeptrai2k5');
+  await page.getByRole('textbox', { name: 'Tên đăng nhập hoặc email' }).fill(USER_EMAIL);
+  await page.getByRole('textbox', { name: 'Mật khẩu' }).fill(USER_PASSWORD);
   await page.getByRole('button', { name: 'Đăng Nhập' }).click();
   await expect(page.getByRole('link', { name: 'Hello, USER' })).toBeVisible();
 });

@@ -2,6 +2,14 @@
 
 require('dotenv').config({ path: require('node:path').resolve(__dirname, '.env') });
 
+if (process.env.BASE_URL) {
+  const configuredBase = new URL(process.env.BASE_URL);
+  configuredBase.pathname = configuredBase.pathname.replace(/\/login\/?$/, '').replace(/\/+$/, '');
+  configuredBase.search = '';
+  configuredBase.hash = '';
+  process.env.BASE_URL = configuredBase.toString().replace(/\/$/, '');
+}
+
 if (process.env.ADMIN_EMAIL && !process.env.ADMIN_USER) {
   process.env.ADMIN_USER = process.env.ADMIN_EMAIL;
 }
@@ -10,11 +18,47 @@ if (process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASS) {
 }
 
 const base = require('@playwright/test');
-const { BASE_URL } = require('../phu_kien_cong_nghe/playwright/support/config');
-const { storageStateFor } = require('../phu_kien_cong_nghe/playwright/support/auth');
-const seedData = require('../phu_kien_cong_nghe/playwright/support/seed');
+const { BASE_URL } = require('./support/config');
+const seedData = require('./support/seed');
+const { credentialsFor } = require('./support/auth');
+const appBase = new URL(BASE_URL);
+appBase.pathname = appBase.pathname.replace(/\/login\/?$/, '').replace(/\/?$/, '/');
+appBase.search = '';
+appBase.hash = '';
+const APP_BASE_URL = appBase.toString();
+const APP_ORIGIN = new URL(APP_BASE_URL).origin;
+
+function appUrl(path) {
+  return new URL(path.replace(/^\/+/, ''), APP_BASE_URL).toString();
+}
+
+function installAppNavigation(page) {
+  const goto = page.goto.bind(page);
+  page.goto = (url, options) => goto(
+    typeof url === 'string' && url.startsWith('/') ? appUrl(url) : url,
+    options,
+  );
+  return page;
+}
+
+async function loginToApp(page, role) {
+  const credentials = role === 'admin'
+    ? credentialsFor(role)
+    : seedData.userCredentials(role);
+
+  await page.goto(appUrl('/login'));
+  await page.locator('input[name="loginInfo"]').fill(credentials.username);
+  await page.locator('input[name="password"]').fill(credentials.password);
+  await page.locator('input[type="submit"]').click();
+  if (new URL(page.url()).pathname.endsWith('/login')) {
+    const error = page.locator('.alert-error');
+    const detail = await error.count() ? await error.innerText() : 'No login error message was displayed.';
+    throw new Error(`Login failed for ${role}: ${detail}`);
+  }
+}
+
 const CONTEXT_OPTIONS = {
-  baseURL: BASE_URL,
+  baseURL: APP_ORIGIN,
   locale: 'vi-VN',
   timezoneId: 'Asia/Ho_Chi_Minh',
   permissions: ['clipboard-read', 'clipboard-write'],
@@ -26,10 +70,11 @@ const test = base.test.extend({
   login: async ({ browser }, use) => {
     const contexts = [];
     await use(async (role) => {
-      const storageState = await storageStateFor(browser, role);
-      const context = await browser.newContext({ ...CONTEXT_OPTIONS, storageState });
+      const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      const page = installAppNavigation(await context.newPage());
+      await loginToApp(page, role);
+      return page;
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
@@ -38,17 +83,42 @@ const test = base.test.extend({
     await use(async () => {
       const context = await browser.newContext(CONTEXT_OPTIONS);
       contexts.push(context);
-      return context.newPage();
+      return installAppNavigation(await context.newPage());
     });
     await Promise.all(contexts.map((context) => context.close()));
   },
 });
 const expect = base.expect;
-const { PaymentPage } = require('../phu_kien_cong_nghe/playwright/pages/PaymentPage');
-const app = require('../phu_kien_cong_nghe/playwright/support/app');
-const orders = require('../phu_kien_cong_nghe/playwright/support/orders');
-const { seedBaseData, loadSeed, setVariantStock } = require('../phu_kien_cong_nghe/playwright/support/seed');
-const { one } = require('../phu_kien_cong_nghe/playwright/support/db');
+const { PaymentPage } = require('./pages/PaymentPage');
+const appHelpers = require('./support/app');
+const { exec } = require('./support/db');
+function appRequest(request) {
+  return new Proxy(request, {
+    get(target, property) {
+      const method = target[property];
+      if (['delete', 'fetch', 'get', 'head', 'patch', 'post', 'put'].includes(property)) {
+        return (url, options) => method.call(
+          target,
+          typeof url === 'string' && url.startsWith('/') ? appUrl(url) : url,
+          options,
+        );
+      }
+      return typeof method === 'function' ? method.bind(target) : method;
+    },
+  });
+}
+const app = new Proxy(appHelpers, {
+  get(target, property) {
+    const helper = target[property];
+    if (['addToCart', 'checkout', 'clearCart'].includes(property)) {
+      return (request, ...args) => helper(appRequest(request), ...args);
+    }
+    return helper;
+  },
+});
+const orders = require('./support/orders');
+const { seedBaseData, loadSeed, setVariantStock } = require('./support/seed');
+const { one } = require('./support/db');
 
 function requireDestructiveDbPermission() {
   const database = process.env.DB_NAME;
@@ -84,15 +154,43 @@ async function openPaymentWith(page, items) {
   for (const [alias, quantity] of items) {
     await app.addToCart(page.request, alias, quantity);
   }
+  await page.goto('/view-cart');
+  for (const [alias, quantity] of items) {
+    const row = page.locator('.row-item').filter({ hasText: seed.products[alias].name });
+    await expect(row.locator('input[name="quantity"]')).toHaveValue(String(quantity));
+  }
   const paymentPage = new PaymentPage(page);
   await paymentPage.goto();
   return paymentPage;
+}
+
+async function ensureSeedProductImages() {
+  const image = await one(
+    "SELECT url_image FROM product_images WHERE url_image IS NOT NULL AND url_image <> '' ORDER BY id LIMIT 1",
+  );
+  if (!image) {
+    throw new Error('Không tìm thấy ảnh sản phẩm mẫu trong DB để tạo fixture cho sản phẩm test.');
+  }
+
+  for (const product of Object.values(seed.products)) {
+    await exec(
+      `INSERT INTO product_images (product_variant_id, product_id, url_image, is_main)
+       SELECT pv.id, pv.product_id, ?, 1
+       FROM product_variants pv
+       WHERE pv.id = ?
+         AND NOT EXISTS (
+           SELECT 1 FROM product_images pi WHERE pi.product_variant_id = pv.id
+         )`,
+      [image.url_image, product.variantId],
+    );
+  }
 }
 
 test.beforeAll(async () => {
   requireDestructiveDbPermission();
   await seedBaseData();
   seed = loadSeed();
+  await ensureSeedProductImages();
 });
 
 test('PAY_View_01 — Truy cập trang thanh toán khi giỏ hàng trống', async ({ login }) => {
@@ -132,12 +230,12 @@ test('PAY_View_03 — Giao diện trang Thanh toán', async ({ login }) => {
 
   await expect(paymentPage.items).toHaveCount(2);
   await expect(paymentPage.itemRow('SP_A')).toContainText('x2');
-  await expect(paymentPage.itemRow('SP_A')).toContainText('200,000₫');
+  await expect(paymentPage.itemRow('SP_A')).toContainText('200.000₫');
   await expect(paymentPage.itemRow('SP_B')).toContainText('x1');
-  await expect(paymentPage.itemRow('SP_B')).toContainText('250,000₫');
-  await expect(paymentPage.subtotal).toHaveText('450,000₫');
-  await expect(paymentPage.shippingFee).toHaveText('25,000₫');
-  await expect(paymentPage.total).toHaveText('475,000₫');
+  await expect(paymentPage.itemRow('SP_B')).toContainText('250.000₫');
+  await expect(paymentPage.subtotal).toHaveText('450.000₫');
+  await expect(paymentPage.shippingFee).toHaveText('25.000₫');
+  await expect(paymentPage.total).toHaveText('475.000₫');
 
   await expect(paymentPage.methodRadios).toHaveCount(2);
   await expect(paymentPage.placeOrderButton).toBeEnabled();
@@ -167,9 +265,9 @@ test('PAY_View_05 — Phí vận chuyển và tổng tiền tại TP.Hồ Chí M
   const page = await login('A');
   const paymentPage = await openPaymentWith(page, [['A', 1]]);
 
-  await expect(paymentPage.subtotal).toHaveText('100,000₫');
-  await expect(paymentPage.shippingFee).toHaveText('25,000₫');
-  await expect(paymentPage.total).toHaveText('125,000₫');
+  await expect(paymentPage.subtotal).toHaveText('100.000₫');
+  await expect(paymentPage.shippingFee).toHaveText('25.000₫');
+  await expect(paymentPage.total).toHaveText('125.000₫');
 });
 
 test('PAY_View_06 — Phí vận chuyển tại Hà Nội', async ({ login, data }) => {
@@ -177,15 +275,15 @@ test('PAY_View_06 — Phí vận chuyển tại Hà Nội', async ({ login, data
   const paymentPage = await openPaymentWith(page, [['A', 1]]);
   const hanoi = data.addresses.A.A2;
 
-  await page.request.get(`/set-address-default?id=${hanoi}`, { maxRedirects: 0 });
+  await appRequest(page.request).get(`/set-address-default?id=${hanoi}`, { maxRedirects: 0 });
   await paymentPage.goto();
   await expect(paymentPage.addressBlock).toContainText('25 Hàng Bài, Hoàn Kiếm');
-  await expect(paymentPage.shippingFee).toHaveText('45,000₫');
-  await expect(paymentPage.total).toHaveText('145,000₫');
+  await expect(paymentPage.shippingFee).toHaveText('45.000₫');
+  await expect(paymentPage.total).toHaveText('145.000₫');
 
-  await page.request.get(`/set-address-default?id=${data.addresses.A.A1}`, { maxRedirects: 0 });
+  await appRequest(page.request).get(`/set-address-default?id=${data.addresses.A.A1}`, { maxRedirects: 0 });
   await paymentPage.goto();
-  await expect(paymentPage.shippingFee).toHaveText('25,000₫');
+  await expect(paymentPage.shippingFee).toHaveText('25.000₫');
 });
 
 test('PAY_Method_01 — Danh sách và lựa chọn mặc định phương thức thanh toán', async ({ login }) => {
@@ -211,7 +309,7 @@ test('PAY_Checkout_01 — Đặt hàng thành công với thanh toán khi nhận
   const stockBefore = await variantStock('A');
   const productStockBefore = await productStock('A');
 
-  await expect(paymentPage.total).toHaveText('125,000₫');
+  await expect(paymentPage.total).toHaveText('125.000₫');
   await paymentPage.note.fill('Giao giờ hành chính');
   await paymentPage.chooseMethod(1);
 
@@ -281,9 +379,9 @@ test('PAY_Checkout_03 — Đặt hàng với nhiều sản phẩm', async ({ log
   const stockBBefore = await variantStock('B');
   const productABefore = await productStock('A');
 
-  await expect(paymentPage.subtotal).toHaveText('450,000₫');
-  await expect(paymentPage.shippingFee).toHaveText('25,000₫');
-  await expect(paymentPage.total).toHaveText('475,000₫');
+  await expect(paymentPage.subtotal).toHaveText('450.000₫');
+  await expect(paymentPage.shippingFee).toHaveText('25.000₫');
+  await expect(paymentPage.total).toHaveText('475.000₫');
 
   const dialogs = app.watchDialogs(page);
   await paymentPage.placeOrder();
@@ -338,7 +436,7 @@ test('PAY_Checkout_05 — Đặt hàng khi số lượng bằng đúng tồn kho
   const page = await login('A');
   const paymentPage = await openPaymentWith(page, [['E', 2]]);
 
-  await expect(paymentPage.total).toHaveText('225,000₫');
+  await expect(paymentPage.total).toHaveText('225.000₫');
   const dialogs = app.watchDialogs(page);
   await paymentPage.placeOrder();
   await waitForDialogs(dialogs, 2);
@@ -519,13 +617,13 @@ test('PAY_Checkout_14 — Chỉ tạo một đơn khi bấm Đặt hàng hai l�
 
 test('PAY_Checkout_15 — Đặt hàng với địa chỉ ngoài TP.Hồ Chí Minh', async ({ login, data }) => {
   const page = await login('A');
-  await page.request.get(`/set-address-default?id=${data.addresses.A.A2}`, { maxRedirects: 0 });
+  await appRequest(page.request).get(`/set-address-default?id=${data.addresses.A.A2}`, { maxRedirects: 0 });
 
   try {
     const paymentPage = await openPaymentWith(page, [['A', 1]]);
     await expect(paymentPage.addressBlock).toContainText('Hà Nội');
-    await expect(paymentPage.shippingFee).toHaveText('45,000₫');
-    await expect(paymentPage.total).toHaveText('145,000₫');
+    await expect(paymentPage.shippingFee).toHaveText('45.000₫');
+    await expect(paymentPage.total).toHaveText('145.000₫');
 
     const dialogs = app.watchDialogs(page);
     await paymentPage.placeOrder();
@@ -539,7 +637,7 @@ test('PAY_Checkout_15 — Đặt hàng với địa chỉ ngoài TP.Hồ Chí Mi
     expect(Number(order.total_must_pay)).toBe(145000);
     expect(order.province_city).toBe('Hà Nội');
   } finally {
-    await page.request.get(`/set-address-default?id=${data.addresses.A.A1}`, { maxRedirects: 0 });
+    await appRequest(page.request).get(`/set-address-default?id=${data.addresses.A.A1}`, { maxRedirects: 0 });
   }
 });
 
@@ -605,7 +703,7 @@ test('PAY_View_07 — Hiển thị khi chưa có địa chỉ mặc định', as
   await expect(page.locator('.no-address')).toContainText('Bạn chưa có địa chỉ nhận hàng.');
   await expect(page.locator('.no-address a')).toHaveText(/Thêm\s+ngay/);
   await expect(paymentPage.shippingFee).toHaveText('0₫');
-  await expect(paymentPage.total).toHaveText('100,000₫');
+  await expect(paymentPage.total).toHaveText('100.000₫');
   await expect(paymentPage.placeOrderButton).toBeDisabled();
   await expect(paymentPage.placeOrderButton).toHaveAttribute('title', 'Vui lòng thêm địa chỉ giao hàng');
 

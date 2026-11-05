@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import mysql from 'mysql2/promise';
 import type { Connection, RowDataPacket } from 'mysql2/promise';
@@ -15,6 +15,9 @@ function requiredEnv(name: string): string {
 const BASE_URL = requiredEnv('BASE_URL');
 const USER_PASSWORD = requiredEnv('USER_PASSWORD');
 const USER_EMAIL = requiredEnv('USER_EMAIL');
+const WISHLIST_USER5_EMAIL = requiredEnv('PW_WISHLIST_USER5_EMAIL');
+const WISHLIST_USER6_EMAIL = requiredEnv('PW_WISHLIST_USER6_EMAIL');
+const WISHLIST_USER7_EMAIL = requiredEnv('PW_WISHLIST_USER7_EMAIL');
 
 function appUrl(path: string): string {
   const base = new URL(BASE_URL);
@@ -70,7 +73,7 @@ async function createUser5Session(browser: Browser): Promise<{
 }> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await login(page, 'wl_user5@test.local', USER_PASSWORD);
+  await login(page, WISHLIST_USER5_EMAIL, USER_PASSWORD);
   return { context, page };
 }
 
@@ -94,15 +97,16 @@ interface PrerequisiteStore {
 }
 
 const runId = process.ppid;
+const specName = path.basename(__filename, path.extname(__filename));
 const prerequisiteStorePath = path.resolve(
-  process.cwd(),
-  'test-results',
-  `wishlist-prerequisites-${runId}.json`,
+  __dirname,
+  '.playwright-state',
+  `${specName}-prerequisites-${runId}.json`,
 );
 const addLoginStorageStatePath = path.resolve(
-  process.cwd(),
-  'test-results',
-  `wishlist-add-login-${runId}.json`,
+  __dirname,
+  '.playwright-state',
+  `${specName}-add-login-${runId}.json`,
 );
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -110,7 +114,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function readPrerequisiteStore(): PrerequisiteStore {
-  const parsed: unknown = JSON.parse(readFileSync(prerequisiteStorePath, 'utf8'));
+  let contents: string;
+  try {
+    contents = readFileSync(prerequisiteStorePath, 'utf8');
+  } catch (error) {
+    if (isRecord(error) && error.code === 'ENOENT') {
+      return { runId, results: {} };
+    }
+    throw error;
+  }
+  const parsed: unknown = JSON.parse(contents);
   if (!isRecord(parsed) || parsed.runId !== runId || !isRecord(parsed.results)) {
     throw new Error('Wishlist prerequisite result file is invalid or belongs to a different test run.');
   }
@@ -124,16 +137,13 @@ function readPrerequisiteStore(): PrerequisiteStore {
   return { runId, results };
 }
 
-function initializePrerequisiteStore(workerIndex: number): void {
+function initializePrerequisiteStore(): void {
   mkdirSync(path.dirname(prerequisiteStorePath), { recursive: true });
-  if (workerIndex === 0) {
-    writeFileSync(prerequisiteStorePath, JSON.stringify({ runId, results: {} }));
-    if (existsSync(addLoginStorageStatePath)) {
-      unlinkSync(addLoginStorageStatePath);
-    }
+  if (existsSync(prerequisiteStorePath)) {
+    readPrerequisiteStore();
     return;
   }
-  readPrerequisiteStore();
+  writeFileSync(prerequisiteStorePath, JSON.stringify({ runId, results: {} }));
 }
 
 function recordPrerequisiteResult(caseId: string, passed: boolean): void {
@@ -164,8 +174,8 @@ let sharedPage: Page;
 test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
   test.describe.configure({ mode: 'default' });
 
-  test.beforeAll(({}, testInfo) => {
-    initializePrerequisiteStore(testInfo.workerIndex);
+  test.beforeAll(() => {
+    initializePrerequisiteStore();
   });
 
   test.beforeEach(async ({ browser }, testInfo) => {
@@ -209,7 +219,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
   function blockIfPrerequisiteFailed(caseId: string): void {
     for (const prerequisite of dependencies[caseId] ?? []) {
       test.skip(readPrerequisiteStore().results[prerequisite] !== true,
-        `Blocked: prerequisite [${prerequisite}] did not pass.`);
+        `Blocked: prerequisite [${prerequisite}] has no recorded Passed result (missing state or prerequisite did not pass).`);
     }
   }
 
@@ -267,7 +277,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
 
     test('[WISHLIST_Add-3] Kiểm tra điều hướng quay lại trang sản phẩm sau khi Guest đăng nhập', async () => {
       blockIfPrerequisiteFailed('WISHLIST_Add-3');
-      await login(sharedPage, 'wl_user5@test.local', USER_PASSWORD);
+      await login(sharedPage, WISHLIST_USER5_EMAIL, USER_PASSWORD);
       await expect(sharedPage).toHaveURL(/\/product-detail\?id=101$/);
     });
   });
@@ -535,7 +545,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
       const context = await browser.newContext();
       try {
         const page = await context.newPage();
-        await login(page, 'wl_user6@test.local', USER_PASSWORD);
+        await login(page, WISHLIST_USER6_EMAIL, USER_PASSWORD);
         await page.goto(appUrl('wishlist'));
         const card = productCard(page, 217);
         await expect(card).toBeVisible();
@@ -555,7 +565,7 @@ test.describe('WISHLIST - Quản lý sản phẩm yêu thích', () => {
       const context = await browser.newContext();
       try {
         const page = await context.newPage();
-        await login(page, 'wl_user7@test.local', USER_PASSWORD);
+        await login(page, WISHLIST_USER7_EMAIL, USER_PASSWORD);
         await page.goto(appUrl('wishlist'));
         const card = productCard(page, 102);
         await expect(card).toBeVisible();
