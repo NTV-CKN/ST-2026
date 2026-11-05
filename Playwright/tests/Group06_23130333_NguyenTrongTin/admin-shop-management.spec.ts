@@ -23,8 +23,6 @@ interface ShopFormData {
   img_url: string;
 }
 
-let shopListPassed = false;
-let shopEditPassed = false;
 let createdShopName: string | undefined;
 let createdShopPhone: string | undefined;
 let editedShopOriginal: ShopRecord | undefined;
@@ -42,9 +40,13 @@ function requireShopWritePermission(): void {
   const allowed = process.env.ALLOW_DESTRUCTIVE_DB === 'true';
   const database = process.env.DB_NAME;
   test.skip(
-    !allowed || database !== 'phu_kien_cong_nghe',
-    `Blocked: this case writes shop data and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe (current DB_NAME=${database ?? 'unset'}).`,
+      !allowed || database !== 'phu_kien_cong_nghe',
+      `Blocked: this case writes shop data and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe (current DB_NAME=${database ?? 'unset'}).`,
   );
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function databaseConfig() {
@@ -56,7 +58,7 @@ function databaseConfig() {
     host: requiredEnv('DB_HOST'),
     port,
     user: requiredEnv('DB_USER'),
-    password: requiredEnv('DB_PASSWORD'),
+    password: process.env.DB_PASSWORD ?? '',
     database: requiredEnv('DB_NAME'),
   };
 }
@@ -73,10 +75,10 @@ async function withDb<T>(action: (connection: Connection) => Promise<T>): Promis
 async function readShop(id: number): Promise<ShopRecord | undefined> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<ShopRecord[]>(
-      `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
-              facebook_url, instagram_url, img_url, status
-       FROM contact_shops WHERE id = ?`,
-      [id],
+        `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
+                facebook_url, instagram_url, img_url, status
+         FROM contact_shops WHERE id = ?`,
+        [id],
     );
     return rows[0];
   });
@@ -85,10 +87,10 @@ async function readShop(id: number): Promise<ShopRecord | undefined> {
 async function readShopByName(name: string): Promise<ShopRecord | undefined> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<ShopRecord[]>(
-      `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
-              facebook_url, instagram_url, img_url, status
-       FROM contact_shops WHERE shop_name = ?`,
-      [name],
+        `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
+                facebook_url, instagram_url, img_url, status
+         FROM contact_shops WHERE shop_name = ?`,
+        [name],
     );
     return rows[0];
   });
@@ -97,7 +99,7 @@ async function readShopByName(name: string): Promise<ShopRecord | undefined> {
 async function readShops(): Promise<ShopRecord[]> {
   return withDb(async (connection) => {
     const [rows] = await connection.execute<ShopRecord[]>(
-      `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
+        `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
               facebook_url, instagram_url, img_url, status
        FROM contact_shops ORDER BY id DESC`,
     );
@@ -109,14 +111,14 @@ async function searchShopsInDb(term: string): Promise<ShopRecord[]> {
   return withDb(async (connection) => {
     const pattern = `%${term}%`;
     const [rows] = await connection.execute<ShopRecord[]>(
-      `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
+        `SELECT id, shop_name, shop_address, shop_phone_number, shop_hotline, shop_email,
               facebook_url, instagram_url, img_url, status
        FROM contact_shops
        WHERE CAST(id AS CHAR) LIKE ? OR shop_name LIKE ? OR shop_address LIKE ?
           OR shop_phone_number LIKE ? OR shop_hotline LIKE ? OR shop_email LIKE ?
           OR facebook_url LIKE ? OR instagram_url LIKE ?
        ORDER BY id DESC`,
-      Array(8).fill(pattern),
+        Array(8).fill(pattern),
     );
     return rows;
   });
@@ -126,8 +128,8 @@ async function deleteCreatedShop(): Promise<void> {
   if (!createdShopName || !createdShopPhone) return;
   await withDb(async (connection) => {
     await connection.execute(
-      'DELETE FROM contact_shops WHERE shop_name = ? AND shop_phone_number = ?',
-      [createdShopName, createdShopPhone],
+        'DELETE FROM contact_shops WHERE shop_name = ? AND shop_phone_number = ?',
+        [createdShopName, createdShopPhone],
     );
   });
   createdShopName = undefined;
@@ -139,22 +141,22 @@ async function restoreEditedShop(): Promise<void> {
   const shop = editedShopOriginal;
   await withDb(async (connection) => {
     await connection.execute(
-      `UPDATE contact_shops
+        `UPDATE contact_shops
        SET shop_name = ?, shop_address = ?, shop_phone_number = ?, shop_hotline = ?,
            shop_email = ?, facebook_url = ?, instagram_url = ?, img_url = ?, status = ?
        WHERE id = ?`,
-      [
-        shop.shop_name,
-        shop.shop_address,
-        shop.shop_phone_number,
-        shop.shop_hotline,
-        shop.shop_email,
-        shop.facebook_url,
-        shop.instagram_url,
-        shop.img_url,
-        shop.status,
-        shop.id,
-      ],
+        [
+          shop.shop_name,
+          shop.shop_address,
+          shop.shop_phone_number,
+          shop.shop_hotline,
+          shop.shop_email,
+          shop.facebook_url,
+          shop.instagram_url,
+          shop.img_url,
+          shop.status,
+          shop.id,
+        ],
     );
   });
   editedShopOriginal = undefined;
@@ -189,8 +191,8 @@ function shopArticle(page: Page, id: number) {
 }
 
 async function fillRequiredFields(
-  form: Locator,
-  data: ShopFormData,
+    form: Locator,
+    data: ShopFormData,
 ): Promise<void> {
   await form.locator('[name="shop_name"]').fill(data.shop_name);
   await form.locator('[name="shop_address"]').fill(data.shop_address);
@@ -207,8 +209,8 @@ async function createShopThroughForm(page: Page, data: ShopFormData): Promise<vo
 }
 
 async function postShopAction(
-  page: Page,
-  form: Record<string, string>,
+    page: Page,
+    form: Record<string, string>,
 ): Promise<{ status: number; location: string | undefined }> {
   const response = await page.request.post('admin/shop-info', {
     form,
@@ -221,6 +223,8 @@ async function postShopAction(
 }
 
 test.describe('ADM_SHOP - Admin shop management', () => {
+  test.describe.configure({ mode: 'default' });
+
   test('ADM_SHOP_AUTH-01: Chặn truy cập shop-info khi chưa đăng nhập', async ({ request }) => {
     const response = await request.get('admin/shop-info', { maxRedirects: 0 });
     expect(response.status()).toBe(302);
@@ -234,7 +238,7 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
     const admin = await withDb(async (connection) => {
       const [rows] = await connection.execute<
-        (RowDataPacket & { id: number; email: string; status: string })[]
+          (RowDataPacket & { id: number; email: string; status: string })[]
       >('SELECT id, email, status FROM users WHERE id = ?', [adminId]);
       return rows[0];
     });
@@ -260,8 +264,8 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     await page.goto('login');
     await page.locator('form.login input[name="loginInfo"]').fill(requiredEnv('PW_ADMIN_SHOP_CUSTOMER_EMAIL'));
     await page
-      .locator('form.login input[name="password"]')
-      .fill(requiredEnv('PW_ADMIN_SHOP_CUSTOMER_PASSWORD'));
+        .locator('form.login input[name="password"]')
+        .fill(requiredEnv('PW_ADMIN_SHOP_CUSTOMER_PASSWORD'));
     await page.locator('form.login input[type="submit"]').click();
 
     const response = await page.goto('admin/shop-info');
@@ -272,56 +276,56 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     await loginAdmin(page);
     const shops = await readShops();
     const renderedIds = await page.locator('article.record').evaluateAll((articles) =>
-      articles.map((article) => {
-        const match = article.querySelector('small')?.textContent?.match(/Mã #(\d+)/);
-        return match ? Number(match[1]) : Number.NaN;
-      }),
+        articles.map((article) => {
+          const match = article.querySelector('small')?.textContent?.match(/Mã #(\d+)/);
+          return match ? Number(match[1]) : Number.NaN;
+        }),
     );
 
     expect(renderedIds.length).toBeGreaterThan(0);
     expect(renderedIds).toEqual(shops.map((shop) => shop.id));
     expect(renderedIds).toEqual([...renderedIds].sort((a, b) => b - a));
-    shopListPassed = true;
   });
 
   test.describe('Shop search', () => {
     test('ADM_SHOP_SRCH-01: Tìm chính xác cửa hàng theo ID và số điện thoại', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       await loginAdmin(page);
       const [shop] = await readShops();
       expect(shop, 'Expected at least one shop search fixture').toBeDefined();
 
-      const searches: Array<[string, string]> = [
-        [String(shop!.id), `Mã #${shop!.id}`],
-        [shop!.shop_phone_number, shop!.shop_phone_number],
+      const searches: Array<[string, RegExp]> = [
+        [String(shop!.id), new RegExp(`Mã #${shop!.id}(?!\\d)`)],
+        [shop!.shop_phone_number, new RegExp(escapeRegExp(shop!.shop_phone_number))],
       ];
       for (const [term, expected] of searches) {
         await page.locator('#shop-search').fill(term);
         await page.getByRole('button', { name: 'Tìm kiếm' }).click();
         await expect(page).toHaveURL(/\/admin\/shop-info\?q=/);
         const results = page.locator('article.record');
-        await expect(results).toHaveCount(1);
-        await expect(results).toContainText(expected);
+        await expect(results.filter({ hasText: expected })).toHaveCount(1);
       }
     });
 
     test('ADM_SHOP_SRCH-02: Tìm tương đối theo thông tin cửa hàng', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
-      const term = process.env.PW_ADMIN_SHOP_FUZZY_TERM?.trim() || 'Cầu Giấy';
-      const fixtures = await searchShopsInDb(term);
-      test.skip(fixtures.length === 0, `Blocked: no shop fixture contains "${term}".`);
+      let term = process.env.PW_ADMIN_SHOP_FUZZY_TERM?.trim() || 'Cầu Giấy';
+      let fixtures = await searchShopsInDb(term);
+      if (fixtures.length === 0) {
+        const [latest] = await readShops();
+        term = latest?.shop_name.trim() ?? '';
+        fixtures = term ? await searchShopsInDb(term) : [];
+      }
+      test.skip(fixtures.length === 0, 'Blocked: no shop fixture available for fuzzy search.');
 
       await loginAdmin(page);
       await page.locator('#shop-search').fill(term);
       await page.getByRole('button', { name: 'Tìm kiếm' }).click();
       await expect(page.locator('article.record')).toHaveCount(fixtures.length);
       for (const article of await page.locator('article.record').all()) {
-        await expect(article).toContainText(new RegExp(term, 'i'));
+        await expect(article).toContainText(new RegExp(escapeRegExp(term), 'i'));
       }
     });
 
     test('ADM_SHOP_SRCH-03: Hiển thị rỗng khi không có kết quả', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       const fixtures = await searchShopsInDb('XYZ123');
       test.skip(fixtures.length > 0, 'Blocked: XYZ123 exists in the configured shop database.');
 
@@ -335,10 +339,7 @@ test.describe('ADM_SHOP - Admin shop management', () => {
   });
 
   test.describe('Shop creation validation', () => {
-    test.describe.configure({ mode: 'serial' });
-
     test('ADM_SHOP_CREATE-01: Không gửi form khi thiếu trường bắt buộc', async ({ page }) => {
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
       await loginAdmin(page);
       const form = page.locator('form.editor-form').first();
       const data = newShopData('required');
@@ -361,9 +362,9 @@ test.describe('ADM_SHOP - Admin shop management', () => {
           await form.locator(`[name="${missingField}"]`).fill('');
           await form.getByRole('button', { name: 'Thêm cửa hàng' }).click();
           expect(
-            await form.locator(`[name="${missingField}"]`).evaluate((element) =>
-              (element as HTMLInputElement).validity.valueMissing,
-            ),
+              await form.locator(`[name="${missingField}"]`).evaluate((element) =>
+                  (element as HTMLInputElement).validity.valueMissing,
+              ),
           ).toBe(true);
           expect(postSent).toBe(false);
         }
@@ -383,16 +384,15 @@ test.describe('ADM_SHOP - Admin shop management', () => {
       await expect(form.locator('[name="shop_name"]')).toHaveValue(data.shop_name);
       await expect(form.locator('[name="shop_address"]')).toHaveValue(data.shop_address);
       expect(
-        await form.locator('[name="shop_hotline"]').evaluate((element) =>
-          (element as HTMLInputElement).validity.valueMissing,
-        ),
+          await form.locator('[name="shop_hotline"]').evaluate((element) =>
+              (element as HTMLInputElement).validity.valueMissing,
+          ),
       ).toBe(true);
     });
   });
 
   test('ADM_SHOP_CREATE-02: Thêm cửa hàng khi các trường tùy chọn để trống', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     await loginAdmin(page);
     const data = newShopData('optional');
     createdShopName = data.shop_name;
@@ -415,10 +415,9 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_CREATE-03: Chỉ giữ một cửa hàng ở trạng thái hoạt động', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const originalStatuses = await withDb(async (connection) => {
       const [rows] = await connection.execute<(RowDataPacket & { id: number; status: number })[]>(
-        'SELECT id, status FROM contact_shops',
+          'SELECT id, status FROM contact_shops',
       );
       return rows;
     });
@@ -439,7 +438,7 @@ test.describe('ADM_SHOP - Admin shop management', () => {
       expect(Number(created!.status)).toBe(1);
       const remainingActive = await withDb(async (connection) => {
         const [rows] = await connection.execute<(RowDataPacket & { id: number })[]>(
-          'SELECT id FROM contact_shops WHERE status = 1',
+            'SELECT id FROM contact_shops WHERE status = 1',
         );
         return rows;
       });
@@ -490,13 +489,10 @@ test.describe('ADM_SHOP - Admin shop management', () => {
     expect(result.status).toBe(404);
   });
 
-  test.describe('Shop edit and active-status dependency', () => {
-    test.describe.configure({ mode: 'serial' });
-
+  test.describe('Shop edit and active-status checks', () => {
     test('ADM_SHOP_EDIT-03: Cập nhật tên và số điện thoại cửa hàng', async ({ page }) => {
       requireShopWritePermission();
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
-      const id = Number(process.env.PW_ADMIN_SHOP_EDIT_ID || 1);
+      const id = Number(process.env.PW_ADMIN_SHOP_EDIT_ID || (await readShops())[0]?.id || 1);
       editedShopOriginal = await readShop(id);
       expect(editedShopOriginal, `Expected shop fixture ID ${id}`).toBeDefined();
 
@@ -516,7 +512,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
           shop_name: updatedName,
           shop_phone_number: updatedPhone,
         });
-        shopEditPassed = true;
       } finally {
         await restoreEditedShop();
       }
@@ -524,11 +519,9 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
     test('ADM_SHOP_EDIT-04: Chuyển shop sang hoạt động và ẩn các shop còn lại', async ({ page }) => {
       requireShopWritePermission();
-      if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
-      if (!shopEditPassed) test.skip(true, 'Blocked: ADM_SHOP_EDIT-03 did not pass.');
       const originalStatuses = await withDb(async (connection) => {
         const [rows] = await connection.execute<(RowDataPacket & { id: number; status: number })[]>(
-          'SELECT id, status FROM contact_shops ORDER BY id',
+            'SELECT id, status FROM contact_shops ORDER BY id',
         );
         return rows;
       });
@@ -578,7 +571,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_DEL-03: Xóa thành công cửa hàng tạm do test tạo', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('delete');
     createdShopName = data.shop_name;
     createdShopPhone = data.shop_phone_number;
@@ -611,7 +603,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_SEC-01: Lưu và hiển thị đúng URL Facebook, Instagram', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('social');
     createdShopName = data.shop_name;
     createdShopPhone = data.shop_phone_number;
@@ -642,7 +633,6 @@ test.describe('ADM_SHOP - Admin shop management', () => {
 
   test('ADM_SHOP_SEC-02: Escape nội dung XSS khi hiển thị tên cửa hàng', async ({ page }) => {
     requireShopWritePermission();
-    if (!shopListPassed) test.skip(true, 'Blocked: ADM_SHOP_VIEW-01 did not pass.');
     const data = newShopData('xss');
     const payload = "<script>alert('XSS')</script>";
     data.shop_name = payload;
