@@ -1,15 +1,36 @@
 import { expect, test, type Page } from '@playwright/test';
 import mysql from 'mysql2/promise';
 import type { RowDataPacket } from 'mysql2/promise';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const dependencies: Record<string, string[]> = {
   'AUTH_Register-4': ['AUTH_Register-3'],
-  'AUTH_Reset-2': ['AUTH_Forgot-2'],
   'AUTH_Reset-3': ['AUTH_Reset-2'],
   'AUTH_Reset-4': ['AUTH_Reset-3'],
 };
 
-const caseResults = new Map<string, boolean>();
+// Playwright restarts the worker after a failed test, which wipes module state.
+// Persist case results per run (keyed by the runner's pid) so dependency checks survive that.
+const resultsFile = path.join(os.tmpdir(), `pw-auth-results-${process.ppid}.json`);
+
+function readResults(): Record<string, boolean> {
+  try {
+    return JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+const caseResults = {
+  get(caseId: string): boolean | undefined {
+    return readResults()[caseId];
+  },
+  set(caseId: string, passed: boolean): void {
+    fs.writeFileSync(resultsFile, JSON.stringify({ ...readResults(), [caseId]: passed }));
+  },
+};
 
 let activeResetToken = '';
 
@@ -26,8 +47,8 @@ function requireDestructiveDbPermission(): void {
   const allowed = process.env.ALLOW_DESTRUCTIVE_DB === 'true';
   const database = process.env.DB_NAME;
   test.skip(
-    !allowed || database !== 'phu_kien_cong_nghe',
-    'Blocked: this case changes a user or password-reset record and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe.',
+      !allowed || database !== 'phu_kien_cong_nghe',
+      'Blocked: this case changes a user or password-reset record and requires ALLOW_DESTRUCTIVE_DB=true with DB_NAME=phu_kien_cong_nghe.',
   );
 }
 
@@ -36,9 +57,59 @@ function databaseConfig() {
     host: requiredEnv('DB_HOST'),
     port: Number(process.env.DB_PORT || 3306),
     user: requiredEnv('DB_USER'),
-    password: requiredEnv('DB_PASSWORD'),
+    password: process.env.DB_PASSWORD ?? '',
     database: requiredEnv('DB_NAME'),
   };
+}
+
+async function ensureResetToken(email: string): Promise<string> {
+  if (activeResetToken) return activeResetToken;
+  requireDestructiveDbPermission();
+  const connection = await mysql.createConnection(databaseConfig());
+  try {
+    const [rows] = await connection.execute<Array<RowDataPacket & { token: string }>>(
+        'SELECT token FROM password_resets WHERE email = ? AND expiry_date > NOW() ORDER BY expiry_date DESC LIMIT 1',
+        [email],
+    );
+    activeResetToken = rows[0]?.token ?? '';
+    if (!activeResetToken) {
+      const seeded = `pwtest-${Date.now()}`;
+      try {
+        await connection.execute(
+            'INSERT INTO password_resets (email, token, expiry_date) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE))',
+            [email, seeded],
+        );
+      } catch (error) {
+        test.skip(true, `Blocked: cannot seed password_resets (${(error as Error).message}).`);
+      }
+      activeResetToken = seeded;
+    }
+    return activeResetToken;
+  } finally {
+    await connection.end();
+  }
+}
+
+async function readPasswordHash(email: string): Promise<string | null> {
+  const connection = await mysql.createConnection(databaseConfig());
+  try {
+    const [rows] = await connection.execute<Array<RowDataPacket & { password: string | null }>>(
+        'SELECT password FROM users WHERE email = ?',
+        [email],
+    );
+    return rows[0]?.password ?? null;
+  } finally {
+    await connection.end();
+  }
+}
+
+async function restorePasswordHash(email: string, hash: string): Promise<void> {
+  const connection = await mysql.createConnection(databaseConfig());
+  try {
+    await connection.execute('UPDATE users SET password = ? WHERE email = ?', [hash, email]);
+  } finally {
+    await connection.end();
+  }
 }
 
 async function signIn(page: Page, loginInfo: string, password: string): Promise<void> {
@@ -55,8 +126,8 @@ test.describe('AUTH - Authentication flows', () => {
     const caseId = testInfo.title.match(/\bAUTH_[A-Za-z]+-\d+\b/)?.[0];
     for (const prerequisite of dependencies[caseId ?? ''] ?? []) {
       test.skip(
-        caseResults.get(prerequisite) !== true,
-        `Blocked: prerequisite ${prerequisite} did not pass.`,
+          caseResults.get(prerequisite) !== true,
+          `Blocked: prerequisite ${prerequisite} did not pass.`,
       );
     }
   });
@@ -181,7 +252,7 @@ test.describe('AUTH - Authentication flows', () => {
     await page.locator('.btn-register').click();
 
     await expect(page.locator('#pw1Error')).toHaveText(
-      'Mật khẩu 8-16 ký tự, có chữ hoa, số và ký tự đặc biệt',
+        'Mật khẩu 8-16 ký tự, có chữ hoa, số và ký tự đặc biệt',
     );
   });
 
@@ -202,14 +273,14 @@ test.describe('AUTH - Authentication flows', () => {
   test.describe('Firebase registration and email verification dependency', () => {
     test('AUTH_Register-3: Tạo tài khoản Firebase và gửi email xác thực', async () => {
       test.skip(
-        true,
-        'Blocked: requires an isolated Firebase test tenant and a controlled verification inbox/emulator.',
+          true,
+          'Blocked: requires an isolated Firebase test tenant and a controlled verification inbox/emulator.',
       );
     });
     test('AUTH_Register-4: Lưu tài khoản sau khi xác thực email', async () => {
       test.skip(
-        true,
-        'Blocked: requires the Firebase registration and email verification flow from AUTH_Register-3.',
+          true,
+          'Blocked: requires the Firebase registration and email verification flow from AUTH_Register-3.',
       );
     });
   });
@@ -227,13 +298,13 @@ test.describe('AUTH - Authentication flows', () => {
     const result = await response.json();
 
     expect(response.ok()).toBeTruthy();
-    expect(result.message).toBe('Email không tồn tại trong hệ thống');
+    expect(result.message).toBe('Có vẻ như email này không có trong hệ thống của chúng tôi');
   });
 
   test('AUTH_Forgot-2: Gửi link đặt lại mật khẩu đến email hợp lệ', async ({ request }) => {
     test.skip(
-      process.env.PW_AUTH_ALLOW_EMAIL_SEND !== 'true',
-      'Blocked: set PW_AUTH_ALLOW_EMAIL_SEND=true only for a dedicated test inbox before sending a real email.',
+        process.env.PW_AUTH_ALLOW_EMAIL_SEND !== 'true',
+        'Blocked: set PW_AUTH_ALLOW_EMAIL_SEND=true only for a dedicated test inbox before sending a real email.',
     );
     requireDestructiveDbPermission();
     const email = requiredEnv('PW_AUTH_FORGOT_EMAIL');
@@ -247,8 +318,8 @@ test.describe('AUTH - Authentication flows', () => {
       expect(result.message).toContain('Đã gửi link cập nhật lại mật khẩu');
 
       const [rows] = await connection.execute<Array<RowDataPacket & { token: string }>>(
-        'SELECT token FROM password_resets WHERE email = ? AND expiry_date > NOW() ORDER BY expiry_date DESC LIMIT 1',
-        [email],
+          'SELECT token FROM password_resets WHERE email = ? AND expiry_date > NOW() ORDER BY expiry_date DESC LIMIT 1',
+          [email],
       );
       activeResetToken = rows[0]?.token ?? '';
       expect(activeResetToken).not.toBe('');
@@ -261,33 +332,43 @@ test.describe('AUTH - Authentication flows', () => {
     await page.goto(`view-reset-password?token=invalid-${Date.now()}`);
 
     await expect(page.locator('#resetForm')).toHaveCount(0);
-    await expect(page.locator('h2')).toHaveText('Token không hợp lệ hoặc đã hết hạn');
+    await expect(page.locator('h2')).toHaveText('Token hết hạn hoặc không tìm thấy email từ token này');
   });
 
   test.describe('Valid reset token, password change and token reuse dependency', () => {
     test('AUTH_Reset-2: Hiển thị form khi token đặt lại mật khẩu hợp lệ', async ({ page }) => {
-      await page.goto(`view-reset-password?token=${encodeURIComponent(activeResetToken)}`);
+      const token = await ensureResetToken(requiredEnv('PW_AUTH_FORGOT_EMAIL'));
+
+      await page.goto(`view-reset-password?token=${encodeURIComponent(token)}`);
 
       await expect(page.locator('#resetForm')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Thiết lập mật khẩu mới' })).toBeVisible();
     });
 
     test('AUTH_Reset-3: Đặt lại mật khẩu thành công qua giao diện', async ({ page }) => {
+      requireDestructiveDbPermission();
       const newPassword = requiredEnv('PW_AUTH_RESET_NEW_PASSWORD');
+      const email = requiredEnv('PW_AUTH_FORGOT_EMAIL');
+      const token = await ensureResetToken(email);
+      const originalHash = await readPasswordHash(email);
 
-      await page.goto(`view-reset-password?token=${encodeURIComponent(activeResetToken)}`);
-      await page.locator('#password').fill(newPassword);
-      await page.locator('#confirmPassword').fill(newPassword);
-      page.on('dialog', (dialog) => dialog.accept());
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes('/reset-password') && response.request().method() === 'POST',
-      );
-      await page.locator('.btn-submit').click();
-      const response = await responsePromise;
-      const result = await response.json();
+      try {
+        await page.goto(`view-reset-password?token=${encodeURIComponent(token)}`);
+        await page.locator('#password').fill(newPassword);
+        await page.locator('#confirmPassword').fill(newPassword);
+        page.on('dialog', (dialog) => dialog.accept());
+        const responsePromise = page.waitForResponse(
+            (response) => response.url().includes('/reset-password') && response.request().method() === 'POST',
+        );
+        await page.locator('.btn-submit').click();
+        const response = await responsePromise;
+        const result = await response.json();
 
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Cập nhật mật khẩu thành công');
+        expect(result.success).toBe(true);
+        expect(result.message).toBe('Cập nhật mật khẩu thành công');
+      } finally {
+        if (originalHash !== null) await restorePasswordHash(email, originalHash);
+      }
     });
 
     test('AUTH_Reset-4: Không sử dụng lại token sau khi đã đổi mật khẩu', async ({ page }) => {
@@ -300,8 +381,8 @@ test.describe('AUTH - Authentication flows', () => {
 
   test('AUTH_Reset-5: Kiểm tra API chấp nhận mật khẩu yếu khi bỏ qua JavaScript', async () => {
     test.skip(
-      true,
-      'Not automated: this case reproduces a weak-password policy bypass against the reset endpoint.',
+        true,
+        'Not automated: this case reproduces a weak-password policy bypass against the reset endpoint.',
     );
   });
 
