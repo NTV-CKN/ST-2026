@@ -127,10 +127,11 @@ interface PrerequisiteStore {
 }
 
 const runId = process.ppid;
+const specName = path.basename(__filename, path.extname(__filename));
 const prerequisiteStorePath = path.resolve(
-  process.cwd(),
-  'test-results',
-  `article-admin-prerequisites-${runId}.json`,
+  __dirname,
+  '.playwright-state',
+  `${specName}-prerequisites-${runId}.json`,
 );
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -138,7 +139,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function readPrerequisiteStore(): PrerequisiteStore {
-  const parsed: unknown = JSON.parse(readFileSync(prerequisiteStorePath, 'utf8'));
+  let contents: string;
+  try {
+    contents = readFileSync(prerequisiteStorePath, 'utf8');
+  } catch (error) {
+    if (isRecord(error) && error.code === 'ENOENT') {
+      return { runId, results: {} };
+    }
+    throw error;
+  }
+  const parsed: unknown = JSON.parse(contents);
   if (!isRecord(parsed) || parsed.runId !== runId || !isRecord(parsed.results)) {
     throw new Error('Article prerequisite result file is invalid or belongs to a different test run.');
   }
@@ -164,9 +174,9 @@ function readPrerequisiteStore(): PrerequisiteStore {
   return store;
 }
 
-function initializePrerequisiteStore(workerIndex: number): PrerequisiteStore {
+function initializePrerequisiteStore(): PrerequisiteStore {
   mkdirSync(path.dirname(prerequisiteStorePath), { recursive: true });
-  if (workerIndex !== 0) {
+  if (existsSync(prerequisiteStorePath)) {
     return readPrerequisiteStore();
   }
   const store: PrerequisiteStore = { runId, results: {} };
@@ -191,8 +201,8 @@ let createdArticleTitle: string | undefined;
 test.describe('ARTICLE_MGT - Quản lý bài báo', () => {
   test.describe.configure({ mode: 'default' });
 
-  test.beforeAll(async ({ browser }: { browser: Browser }, testInfo) => {
-    const store = initializePrerequisiteStore(testInfo.workerIndex);
+  test.beforeAll(async ({ browser }: { browser: Browser }) => {
+    const store = initializePrerequisiteStore();
     if (store.createdArticle) {
       createdArticleId = store.createdArticle.id;
       createdArticleTitle = store.createdArticle.title;
@@ -219,7 +229,7 @@ test.describe('ARTICLE_MGT - Quản lý bài báo', () => {
   function blockIfPrerequisiteFailed(caseId: string): void {
     for (const prerequisite of dependencies[caseId] ?? []) {
       test.skip(readPrerequisiteStore().results[prerequisite] !== true,
-        `Blocked: prerequisite [${prerequisite}] did not pass.`);
+        `Blocked: prerequisite [${prerequisite}] has no recorded Passed result (missing state or prerequisite did not pass).`);
     }
   }
 

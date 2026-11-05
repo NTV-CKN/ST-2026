@@ -2,7 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { env } from 'node:process';
 
-const BASE_URL = env.BASE_URL?.trim() || 'http://localhost:8080/';
+const BASE_URL = env.BASE_URL?.trim();
+if (!BASE_URL) {
+    throw new Error('Missing required environment variable: BASE_URL');
+}
 const CUSTOMER_EMAIL = env.USER_EMAIL?.trim();
 const CUSTOMER_PASSWORD = env.USER_PASSWORD;
 

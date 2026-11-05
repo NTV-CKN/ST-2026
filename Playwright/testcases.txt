@@ -1,0 +1,1363 @@
+======================Các test case trong Group06_23130390_NguyenTruongVu==================
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[ARTICLE_MGT_List-1]	Hiển thị danh sách bài viết dạng card	"Tiền điều kiện: Quyền Admin (`role = 1`)
+
+Các bước:
+ 1. Truy cập đường dẫn `/admin/articles`
+ 2. Quan sát danh sách bài báo"	"1. Chuyển hướng đến trang Quản lý bài viết thành công.
+2. Hiển thị danh sách dạng Card gồm: Tiêu đề, Mô tả ngắn, Mã #ID, Tên tác giả, Ngày đăng, nút [Chỉnh sửa] và nút [Xóa]."	Đăng nhập Admin (role = 1)	Passed	21/10/2026	
+[ARTICLE_MGT_List-2]	Kiểm tra sắp xếp mặc định bài viết mới nhất lên đầu	"Tiền điều kiện: Đã có nhiều bài viết trong CSDL
+Các bước:
+1. Tải lại trang /admin/articles
+2. Quan sát thứ tự hiển thị"	"1. Tải dữ liệu thành công.
+2. Các bài viết được sắp xếp giảm dần theo ngày đăng (ORDER BY post_date DESC)."	[ARTICLE_MGT_List-1]	Passed	22/10/2026	
+[ARTICLE_MGT_List-3]	Kiểm tra tìm kiếm bài báo tương đối theo Tên/Nội dung/Tác giả	"Tiền điều kiện: Đã có bài viết chứa từ ""Công nghệ""
+Các bước:
+1. Nhập Công nghệ vào ô tìm kiếm (q)
+2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa ""Công nghệ"".
+2. Danh sách lọc và hiển thị các bài viết khớp từ khóa theo điều kiện LIKE %...%."	[ARTICLE_MGT_List-1]	Passed	23/10/2026	
+[ARTICLE_MGT_List-4]	Kiểm tra tìm kiếm bài báo với từ khóa không tồn tại	"Tiền điều kiện: Không có bài viết nào chứa chuỗi ""XYZ999""
+Các bước:
+1. Nhập XYZ999 vào ô tìm kiếm
+2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa.
+2. Hiển thị thông báo: Không tìm thấy bài viết phù hợp với ""XYZ999""."	[ARTICLE_MGT_List-1]	Failed	24/10/2026	Tìm kiếm với từ khóa không tồn tại "XYZ999". Hệ thống hiển thị thông báo không có kết quả nhưng từ khóa được bọc trong dấu ngoặc kép cong (“XYZ999”), trong khi kết quả mong đợi ghi dấu ngoặc kép thẳng ("XYZ999"). Chức năng tìm kiếm và danh sách rỗng hoạt động đúng; chỉ lệch ký tự dấu ngoặc kép giữa mô tả mong đợi và giao diện thực tế.
+[ARTICLE_MGT_Add-1]	Kiểm tra để trống một trong các trường bắt buộc khi thêm mới bài báo	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Để trống ô Tiêu đề (hoặc Mô tả ngắn, Nội dung)
+2. Click nút [Đăng bài viết]"	"1. Dữ liệu trường bị trống.
+2. Hệ thống chặn tạo bài và hiển thị thông báo flash error: Vui lòng nhập đầy đủ tiêu đề, mô tả ngắn và nội dung bài viết."	[ARTICLE_MGT_List-1]	Passed	25/10/2026	
+[ARTICLE_MGT_Add-2]	Kiểm tra giới hạn độ dài Tiêu đề bài viết vượt quá 191 ký tự	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Nhập Tiêu đề chuỗi 192 ký tự
+2. Nhập Mô tả ngắn, Nội dung hợp lệ
+3. Click nút [Đăng bài viết]"	"1. Ô tiêu đề hiển thị chuỗi 192 ký tự.
+2. Hệ thống báo lỗi: Tiêu đề không được vượt quá 191 ký tự."	[ARTICLE_MGT_List-1]	Passed	26/10/2026	
+[ARTICLE_MGT_Add-3]	Kiểm tra thêm mới bài báo thành công và tự động xuất bản	"Tiền điều kiện: Nhập đầy đủ Tiêu đề, Mô tả ngắn, Nội dung hợp lệ
+Các bước:
+1. Click nút [Đăng bài viết]
+2. Kiểm tra trang tin tức Client /news"	"1. Thêm mới thành công, hiển thị thông báo: Đã tạo bài viết.
+2. Bài viết mới tự động gán author_id của Admin, post_date hiện tại và xuất bản ngay trên trang /news."	[ARTICLE_MGT_List-1]	Passed	27/10/2026	
+[ARTICLE_MGT_Edit-1]	Kiểm tra cập nhật bài báo với dữ liệu hợp lệ	"Tiền điều kiện: Đã mở form [Chỉnh sửa] trên card bài viết
+Các bước:
+1. Nhập Tiêu đề mới, Mô tả ngắn mới, Nội dung mới
+2. Click nút [Lưu thay đổi]"	"1. Mở form chỉnh sửa thành công.
+2. Hệ thống lưu cập nhật và hiển thị thông báo: Đã cập nhật bài viết."	[ARTICLE_MGT_List-1]	Passed	28/10/2026	<DefectID-1>
+[ARTICLE_MGT_Edit-2]	Kiểm tra các trường bị cố định (Mã bài viết, Tác giả, Ngày đăng)	"Tiền điều kiện: Đang mở form Chỉnh sửa bài viết
+Các bước:
+1. Quan sát các ô nhập liệu trên form
+2. Kiểm tra câu lệnh UPDATE trong hệ thống"	"1. Mã bài viết ở dạng hidden, Tác giả và Ngày đăng không xuất hiện trên form sửa.
+2. Giá trị Tác giả và Ngày đăng ban đầu được giữ nguyên không thay đổi."	[ARTICLE_MGT_Edit-1]	Passed	29/10/2026	
+[ARTICLE_MGT_Delete-1]	Kiểm tra hiển thị hộp thoại xác nhận trước khi xóa bài báo	"Tiền điều kiện: Đang ở trang Quản lý bài viết
+Các bước:
+1. Click nút [Xóa] trên card bài viết"	"1. Hộp thoại xác nhận window.confirm() xuất hiện.
+2. Nội dung hiển thị đúng câu: Xóa bài viết này? Các bình luận liên quan cũng sẽ bị xóa."	[ARTICLE_MGT_List-1]	Passed	31/10/2026	
+[ARTICLE_MGT_Detail-1]	Kiểm tra hiển thị trang Chi tiết bài báo và đếm bình luận đã duyệt	"Tiền điều kiện: Bài viết ID 10 có 2 bình luận approved và 1 bình luận pending
+Các bước:
+1. Truy cập đường dẫn Client /news-detail?id=10"	"1. Trang chi tiết tải thành công nội dung bài viết.
+2. Số lượng bình luận hiển thị đúng là 2 bình luận (chỉ đếm các bình luận có trạng thái approved)."		Passed	03/11/2026	
+[ARTICLE_MGT_Detail-2]	Kiểm tra tải danh sách bình luận đã duyệt qua AJAX endpoint	"Tiền điều kiện: Đang ở trang Chi tiết bài báo ID 10
+Các bước:
+1. Click nút mở/xem danh sách bình luận"	"1. Gọi AJAX GET /article-comments?articleId=10.
+2. Danh sách 2 bình luận đã duyệt hiển thị đúng tên, ngày gửi và nội dung."	[ARTICLE_MGT_Detail-1]	Passed	04/11/2026	
+[ARTICLE_MGT_Comment-1]	Kiểm tra để trống Nội dung bình luận khi gửi	"Tiền điều kiện: Đang ở form Đăng bình luận bài báo
+Các bước:
+1. Để trống ô Nội dung bình luận
+2. Click nút [Đăng bình luận]"	"1. Ô nội dung ở trạng thái rỗng.
+2. Hệ thống chặn gửi và báo lỗi: Vui lòng nhập nội dung bình luận."	[ARTICLE_MGT_Detail-1]	Passed	05/11/2026	
+[ARTICLE_MGT_Comment-2]	Kiểm tra để trống Tên hiển thị khi chưa đăng nhập	"Tiền điều kiện: Khách truy cập chưa đăng nhập tài khoản
+Các bước:
+1. Nhập Nội dung bình luận, để trống Tên hiển thị
+2. Click nút [Đăng bình luận]"	"1. Ô tên hiển thị bị để trống.
+2. Hệ thống báo lỗi: Vui lòng nhập tên hiển thị."	[ARTICLE_MGT_Detail-1]	Passed	06/11/2026	
+[ARTICLE_MGT_Comment-3]	Kiểm tra Tên hiển thị vượt quá 50 ký tự	"Tiền điều kiện: Khách truy cập chưa đăng nhập
+Các bước:
+1. Nhập Tên hiển thị chuỗi 51 ký tự
+2. Click nút [Đăng bình luận]"	"1. Ô tên hiển thị nhận chuỗi 51 ký tự.
+2. Hệ thống báo lỗi: Tên hiển thị không được vượt quá 50 ký tự."	[ARTICLE_MGT_Detail-1]	Passed	07/11/2026	
+[ARTICLE_MGT_Comment-4]	Kiểm tra để trống trường Email khi chưa đăng nhập	"Tiền điều kiện: Khách truy cập chưa đăng nhập
+Các bước:
+1. Nhập Nội dung, Tên hiển thị, để trống Email
+2. Click nút [Đăng bình luận]"	"1. Ô email bị rỗng.
+2. Hệ thống báo lỗi: Vui lòng nhập email."	[ARTICLE_MGT_Detail-1]	Passed	08/11/2026	
+[ARTICLE_MGT_Comment-5]	Kiểm tra định dạng Email không hợp lệ	"Tiền điều kiện: Đang ở form Đăng bình luận
+Các bước:
+1. Nhập ô Email chuỗi abc@xyz (thiếu tên miền hợp lệ)
+2. Click nút [Đăng bình luận]"	"1. Ô email nhận chuỗi sai định dạng.
+2. Hệ thống báo lỗi: Email không hợp lệ."	[ARTICLE_MGT_Detail-1]	Passed	10/11/2026	
+[ARTICLE_MGT_Comment-6]	Kiểm tra đăng bình luận thành công và lưu trạng thái pending	"Tiền điều kiện: Nhập Nội dung, Tên hiển thị, Email hợp lệ
+Các bước:
+1. Click nút [Đăng bình luận]"	"1. Bình luận được lưu vào CSDL với trạng thái pending.
+2. Hiển thị thông báo thành công: Đã gửi bình luận. Bình luận sẽ hiển thị sau khi được duyệt."	[ARTICLE_MGT_Detail-1]	Passed	11/11/2026	
+[ARTICLE_MGT_AdminComm-1]	Kiểm tra lọc danh sách bình luận theo bài báo trong Admin	"Tiền điều kiện: Quyền Admin, truy cập /admin/article-comment
+Các bước:
+1. Chọn bài báo ""Tin tức A"" từ dropdown lọc
+2. Quan sát bảng bình luận"	"1. Chuyển hướng trang quản lý bình luận thành công.
+2. Bảng hiển thị danh sách tất cả bình luận thuộc duy nhất bài báo ""Tin tức A""."	Đăng nhập Admin (role = 1)	Passed	12/11/2026	
+[ARTICLE_MGT_AdminComm-2]	Kiểm tra duyệt bình luận bài báo sang trạng thái approved	"Tiền điều kiện: Bình luận ID 101 đang ở trạng thái pending
+Các bước:
+1. Click nút [Duyệt] tại bình luận ID 101"	"1. Trạng thái bình luận chuyển sang approved.
+2. Hệ thống báo: Đã duyệt bình luận. Bình luận lập tức xuất hiện công khai trên trang Client."	[ARTICLE_MGT_AdminComm-1]	Passed	13/11/2026	
+[ARTICLE_MGT_AdminComm-3]	Kiểm tra ẩn bình luận bài báo sang trạng thái hidden	"Tiền điều kiện: Bình luận ID 102 đang ở trạng thái approved
+Các bước:
+1. Click nút [Ẩn] tại bình luận ID 102"	"1. Trạng thái bình luận chuyển sang hidden.
+2. Hệ thống báo: Đã ẩn bình luận. Bình luận không còn xuất hiện trên trang Client."	[ARTICLE_MGT_AdminComm-1]	Passed	14/11/2026	
+[ARTICLE_MGT_AdminComm-4]	Kiểm tra xóa bình luận bài báo thành công	"Tiền điều kiện: Đang ở trang Quản lý bình luận Admin
+Các bước:
+1. Click nút [Xóa] tại bình luận ID 103
+2. Click [OK] trên popup xác nhận"	"1. Popup xác nhận xuất hiện.
+2. Bản ghi bình luận ID 103 bị xóa khỏi DB, hệ thống báo: Đã xóa bình luận."	[ARTICLE_MGT_AdminComm-1]	Passed	15/11/2026	
+[ARTICLE_MGT_AdminComm-5]	Kiểm tra xử lý khi thao tác trên bình luận không tồn tại	"Tiền điều kiện: Bình luận ID 999 đã bị xóa trước đó
+Các bước:
+1. Gửi request duyệt/xóa bình luận ID 999"	"1. Request gửi đến server.
+2. Hệ thống báo lỗi: Không tìm thấy bình luận cần cập nhật. (hoặc Không tìm thấy bình luận cần xóa.)"	[ARTICLE_MGT_AdminComm-1]	Passed	16/11/2026	
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[WISHLIST_Add-1]	Kiểm tra vị trí và giao diện nút Thêm vào Wishlist	"Tiền điều kiện: Đã mở trang Chi tiết sản phẩm (/product-detail?id=101)
+Các bước:
+1. Quan sát khu vực nút bấm bên dưới nút ""THÊM VÀO GIỎ HÀNG"""	"1. Hiển thị nút ""LƯU VÀO WISHLIST"".
+2. Hiển thị dòng chú thích bên dưới: Sản phẩm được lưu theo sản phẩm chung; bạn chọn biến thể khi thêm vào giỏ."		Passed	21/10/2026	
+[WISHLIST_Add-2]	Kiểm tra Guest bấm Thêm vào Wishlist bị chuyển hướng sang Đăng nhập	"Tiền điều kiện: Chưa đăng nhập tài khoản (Guest)
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST]"	"1. Hệ thống lưu afterLoginPath = /product-detail?id=101 vào Session.
+2. Chuyển hướng lập tức sang trang /login."	Chưa đăng nhập	Passed	22/10/2026	
+[WISHLIST_Add-3]	Kiểm tra điều hướng quay lại trang sản phẩm sau khi Guest đăng nhập	"Tiền điều kiện: Đã bị chuyển hướng sang /login từ bước lưu Wishlist
+Các bước:
+1. Nhập Username/Password hợp lệ
+2. Click nút [Đăng nhập]"	"1. Đăng nhập thành công.
+2. Hệ thống tự động chuyển hướng người dùng quay trở lại đúng URL /product-detail?id=101."	[WISHLIST_Add-2]	Passed	23/10/2026	
+[WISHLIST_Add-4]	Kiểm tra User đã đăng nhập thêm sản phẩm vào Wishlist thành công	"Tiền điều kiện: Đã đăng nhập tài khoản User (user_id = 5)
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST]"	"1. CSDL thêm 1 bản ghi vào bảng wishlists với user_id = 5 và product_id = 101.
+2. Redirect về /product-detail?id=101&wishlist=added kèm thông báo: Đã lưu sản phẩm này vào wishlist. và link Xem wishlist."	Đăng nhập User	Passed	24/10/2026	
+[WISHLIST_Add-5]	Kiểm tra bấm lưu sản phẩm ĐÃ TỒN TẠI trong Wishlist (Idempotent)	"Tiền điều kiện: Sản phẩm ID 101 đã có sẵn trong Wishlist của user
+Các bước:
+1. Mở trang /product-detail?id=101
+2. Click nút [LƯU VÀO WISHLIST] lần nữa"	"1. CSDL thực thi ON DUPLICATE KEY UPDATE id = id (không tạo dòng mới, không văng lỗi trùng index).
+2. Redirect về /product-detail?id=101&wishlist=added hiển thị thông báo thành công."	[WISHLIST_Add-4]	Passed	25/10/2026	
+[WISHLIST_Add-6]	Kiểm tra thêm sản phẩm bị Admin ẩn (status != 1) vào Wishlist	"Tiền điều kiện: Sản phẩm ID 102 bị ẩn (status = 0)
+Các bước:
+1. Gửi request POST /wishlist với action=add&productId=102"	"1. Hệ thống chặn không lưu vào CSDL.
+2. Redirect về /product-detail?id=102&wishlist=unavailable kèm thông báo: Sản phẩm hiện không khả dụng để lưu vào wishlist."	Đăng nhập User	Failed	26/10/2026	Gửi yêu cầu thêm sản phẩm ID 102 (đang bị Admin ẩn, status = 0) vào Wishlist bằng tài khoản user 5. Server xử lý đúng: trả về mã 302 chuyển hướng tới /product-detail?id=102&wishlist=unavailable và không ghi bản ghi nào vào wishlist (số bản ghi của user 5 với sản phẩm 102 vẫn bằng 0). Tuy nhiên trang chi tiết của sản phẩm ẩn lại tiếp tục chuyển hướng về trang chủ, nên thông báo "sản phẩm không khả dụng" không hiển thị cho người dùng như kết quả mong đợi.
+[WISHLIST_View-1]	Kiểm tra truy cập trực tiếp URL /wishlist dưới quyền Guest	"Tiền điều kiện: Chưa đăng nhập (Guest)
+Các bước:
+1. Truy cập trực tiếp đường dẫn http://.../wishlist"	"1. Mở trang wishlist.jsp thành công (wishlistGuest = true).
+2. Hiển thị banner: Bạn có thể xem trang này khi chưa đăng nhập. Hãy đăng nhập để lưu sản phẩm vào wishlist gắn với tài khoản của bạn. và nút Đăng nhập (/login?continue=wishlist)."	Chưa đăng nhập	Passed	27/10/2026	
+[WISHLIST_View-2]	Kiểm tra hiển thị trang Wishlist trống của Guest	"Tiền điều kiện: Chưa đăng nhập (Guest)
+Các bước:
+1. Quan sát vùng nội dung chính của trang /wishlist"	"1. Hiển thị tiêu đề H2: Đăng nhập để xem wishlist của bạn.
+2. Hiển thị mô tả: Sau khi đăng nhập, các sản phẩm yêu thích sẽ được lưu theo tài khoản."	[WISHLIST_View-1]	Passed	28/10/2026	<DefectID-1>
+[WISHLIST_View-3]	Kiểm tra hiển thị trang Wishlist trống của User đã đăng nhập	"Tiền điều kiện: Đã đăng nhập, chưa có sản phẩm nào trong Wishlist
+Các bước:
+1. Truy cập đường dẫn /wishlist"	"1. Hiển thị tiêu đề H2: Wishlist của bạn đang trống.
+2. Hiển thị mô tả: Thêm sản phẩm yêu thích từ trang chi tiết để lưu lại tại đây. và nút Khám phá sản phẩm."	Đăng nhập User	Passed	29/10/2026	
+[WISHLIST_View-4]	Kiểm tra thông tin hiển thị trên Card sản phẩm trong Wishlist	"Tiền điều kiện: Wishlist đang có sản phẩm ID 101
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm ID 101"	"1. Hiển thị Ảnh đại diện chính (hoặc placeholder icon nếu không có ảnh).
+2. Hiển thị Tên sản phẩm (link về trang chi tiết), Giá Từ [min_price]₫.
+3. Hiển thị Dropdown biến thể còn hàng, ô nhập số lượng (mặc định 1), nút [Thêm vào giỏ] và nút Xóa (thùng rác)."	[WISHLIST_Add-4]	Passed	31/10/2026	
+[WISHLIST_View-5]	Kiểm tra định dạng thông tin biến thể trong Dropdown <select>	"Tiền điều kiện: Sản phẩm có các biến thể còn hàng (stock > 0)
+Các bước:
+1. Click mở Dropdown chọn biến thể trên Card sản phẩm"	1. Các Option hiển thị chuẩn định dạng: {Tên biến thể} · {Mã SKU} · {Giá}₫ (còn {Số lượng}). Ví dụ: Màu Đen - Size M · SKU-RED-M · 250,000₫ (còn 15).	[WISHLIST_View-4]	Failed	03/11/2026	Kiểm tra định dạng các tùy chọn biến thể của sản phẩm trong trang Wishlist. Dữ liệu hiển thị đúng (sản phẩm 101 có biến thể GT10, tồn kho 100). Case fail do script kiểm thử: text của option có ký tự xuống dòng giữa các thành phần nên biểu thức kiểm tra định dạng không khớp. Không phải lỗi của ứng dụng. Cần chuẩn hóa khoảng trắng trước khi so khớp, sau đó chạy lại để xác nhận.
+[WISHLIST_View-6]	Kiểm tra biểu tượng Wishlist trên Header	"Tiền điều kiện: Mở trang web bất kỳ
+Các bước:
+1. Quan sát cụm biểu tượng góc trên Header"	"1. Hiển thị icon Wishlist trỏ đến đường dẫn /wishlist.
+2. Icon KHÔNG hiển thị Badge đếm số lượng tự động."		Passed	04/11/2026	
+[WISHLIST_View-7]	Kiểm tra hiển thị sản phẩm Active nhưng tất cả biến thể HẾT HÀNG	"Tiền điều kiện: Sản phẩm status = 1 nhưng tất cả biến thể stock = 0
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm này"	"1. Hệ thống ẩn Form chọn biến thể và nút ""Thêm vào giỏ"".
+2. Hiển thị dòng chữ: Hiện chưa có biến thể còn hàng. và nút Xem sản phẩm."	Đăng nhập User	Passed	05/11/2026	
+[WISHLIST_View-8]	Kiểm tra hiển thị sản phẩm bị Admin ẨN (status != 1)	"Tiền điều kiện: Sản phẩm trong Wishlist bị Admin chuyển trạng thái Inactive
+Các bước:
+1. Mở trang /wishlist
+2. Quan sát Card sản phẩm bị ẩn"	"1. Hệ thống ẩn Form chọn biến thể và ẩn luôn nút ""Xem sản phẩm"".
+2. Hiển thị thông báo: Sản phẩm hiện không còn khả dụng."	Đăng nhập User	Passed	06/11/2026	
+[WISHLIST_Remove-1]	Kiểm tra xóa 1 sản phẩm khỏi Wishlist	"Tiền điều kiện: Card sản phẩm có chứa nút xóa thùng rác (wishlistId = 12)
+Các bước:
+1. Click biểu tượng thùng rác trên Card sản phẩm"	"1. Form gửi request POST /wishlist với action=remove&wishlistId=12.
+2. Bản ghi bị xóa khỏi CSDL, trang reload về /wishlist?success=removed kèm thông báo: Đã xóa sản phẩm khỏi wishlist."	[WISHLIST_View-4]	Passed	07/11/2026	
+[WISHLIST_Move-1]	Kiểm tra Chuyển sản phẩm sang Giỏ hàng với số lượng hợp lệ	"Tiền điều kiện: Biến thể selected có stock = 10
+Các bước:
+1. Chọn Biến thể A, nhập Số lượng = 2
+2. Click nút [Thêm vào giỏ]"	"1. Form gửi POST /wishlist (action=move&productId=3&variantId=5&quantity=2).
+2. Biến thể được thêm vào Session Cart.
+3. Redirect về /wishlist?success=added-to-cart hiển thị thông báo: Đã thêm sản phẩm vào giỏ hàng. Sản phẩm vẫn được giữ trong wishlist."	[WISHLIST_View-4]	Passed	08/11/2026	
+[WISHLIST_Move-2]	Kiểm tra sản phẩm GIỮ NGUYÊN trong Wishlist sau khi Thêm vào giỏ	"Tiền điều kiện: Vừa thực hiện thành công bước [WISHLIST_Move-1]
+Các bước:
+1. Quan sát danh sách sản phẩm trên trang /wishlist"	1. Sản phẩm ID 101 vẫn hiển thị nguyên vẹn trong Wishlist (không bị tự động xóa).	[WISHLIST_Move-1]	Passed	10/11/2026	
+[WISHLIST_Move-3]	Kiểm tra nhập số lượng vượt quá 100 khi Thêm vào giỏ	"Tiền điều kiện: Đang ở Card sản phẩm trong Wishlist
+Các bước:
+1. Ô nhập số lượng gõ giá trị 101
+2. Click nút [Thêm vào giỏ]"	"1. Hệ thống chặn xử lý (quantity > 100 ném IllegalArgumentException).
+2. Redirect về /wishlist?error=invalid kèm thông báo: Thông tin gửi lên không hợp lệ. Vui lòng thử lại."	[WISHLIST_View-4]	Passed	11/11/2026	
+[WISHLIST_Move-4]	Kiểm tra nhập số lượng <= 0 khi Thêm vào giỏ	"Tiền điều kiện: Đang ở Card sản phẩm trong Wishlist
+Các bước:
+1. Ô nhập số lượng gõ giá trị 0 (hoặc -1)
+2. Click nút [Thêm vào giỏ]"	"1. Hệ thống chặn xử lý.
+2. Redirect về /wishlist?error=invalid hiển thị thông báo lỗi."	[WISHLIST_View-4]	Passed	12/11/2026	
+[WISHLIST_DB-1]	Kiểm tra Ràng buộc duy nhất uq_wishlist_user_product trong CSDL	"Tiền điều kiện: Đã có bản ghi user_id = 5, product_id = 101
+Các bước:
+1. Chạy lệnh SQL INSERT INTO wishlists (user_id, product_id) VALUES (5, 101);"	1. CSDL báo lỗi vi phạm khóa duy nhất Duplicate entry '5-101' for key 'uq_wishlist_user_product'.		Passed	14/11/2026	
+[WISHLIST_DB-2]	Kiểm tra Tự động xóa CASCADE Wishlist khi Xóa tài khoản User	"Tiền điều kiện: User ID 5 đang có 3 sản phẩm trong Wishlist
+Các bước:
+1. Thực hiện xóa User ID 5 khỏi bảng users"	"1. Khóa ngoại fk_wishlists_users kích hoạt ON DELETE CASCADE.
+2. Toàn bộ 3 bản ghi wishlist của User ID 5 tự động bị xóa sạch khỏi bảng wishlists."		Passed	15/11/2026	
+[WISHLIST_DB-3]	Kiểm tra Tự động xóa CASCADE Wishlist khi Xóa Sản phẩm	"Tiền điều kiện: Sản phẩm ID 101 đang nằm trong Wishlist của 10 người dùng
+Các bước:
+1. Thực hiện xóa Sản phẩm ID 101 khỏi bảng products"	"1. Khóa ngoại fk_wishlists_products kích hoạt ON DELETE CASCADE.
+2. Tất cả 10 bản ghi liên quan đến product_id = 101 trong bảng wishlists tự động bị xóa hoàn toàn."		Passed	16/11/2026	
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[PROD_MGT_List-1]	Kiểm tra giao diện màn hình Danh sách sản phẩm	"Tiền điều kiện: Người dùng có quyền Admin
+
+Các bước:
+ 1. Truy cập đến trang quản lí sản phẩm của Admin
+ 2. Quan sát giao diện danh sách"	"1. Chuyển hướng thành công đến trang Quản lý sản phẩm.
+2. Hiển thị bảng gồm các cột: Ảnh, Mã ID, Tên, Số biến thể, Tồn kho, Khoảng giá, Thao tác."	Đăng nhập Admin (`role = 1`)	Passed	30/10/2026	
+[PROD_MGT_List-2]	Kiểm tra sắp xếp mặc định của Danh sách sản phẩm	"Tiền điều kiện: Đã có danh sách sản phẩm trong CSDL
+
+Các bước:
+ 1. Tải lại trang Danh sách sản phẩm
+ 2. Quan sát thứ tự hiển thị"	"1. Tải dữ liệu thành công.
+2. Các sản phẩm được sắp xếp mặc định theo Mã ID (`prodId`)."	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_List-3]	Kiểm tra tìm kiếm sản phẩm chính xác theo Mã ID	"Tiền điều kiện: Đã có sản phẩm Mã ID = `105` trong CSDL
+
+Các bước:
+ 1. Nhập `105` vào ô tìm kiếm (`keySearch`)
+ 2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận dữ liệu ""105"".
+2. Bảng lọc và hiển thị duy nhất sản phẩm có Mã ID = `105`."	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_List-4]	Kiểm tra tìm kiếm tương đối theo Tên sản phẩm	"Tiền điều kiện: Đã có sản phẩm ""Cáp Type C to HDMI Feeltek Flexible""
+
+Các bước:
+ 1. Nhập `Cáp Type C to HDMI` vào ô tìm kiếm
+ 2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa ""Cáp Type C to HDMI"".
+2. Bảng hiển thị các sản phẩm có tên chứa từ ""Cáp Type C to HDMI""."	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_List-5]	Kiểm tra tìm kiếm sản phẩm với từ khóa không tồn tại	"Tiền điều kiện: Không có sản phẩm nào chứa chuỗi ""XYZ123""
+
+Các bước:
+ 1. Nhập `XYZ123` vào ô tìm kiếm
+ 2. Nhấn phím Enter"	"1. Ô tìm kiếm nhận từ khóa.
+2. Bảng hiển thị thông báo: `Không có sản phẩm nào`."	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_Add-1]	Kiểm tra giao diện và giá trị mặc định pop-up Thêm sản phẩm	"Tiền điều kiện: Đang ở trang Danh sách sản phẩm
+
+Các bước: 
+ 1. Click nút biểu tượng '+' [Thêm sản phẩm mới] (`.edit-product-add-prod`)"	1. Pop-up `#popup-add-product` hiển thị với các trường rỗng, ô Bảo hành hiển thị mặc định `12` tháng.	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_Add-2]	Kiểm tra trường bắt buộc Tên sản phẩm	"Tiền điều kiện: Đang mở pop-up Thêm sản phẩm
+
+Các bước:
+ 1. Để trống trường Tên sản phẩm
+ 2. Nhập các trường khác hợp lệ và click [Thêm]"	"1. Trường Tên sản phẩm ở trạng thái rỗng.
+2. Hệ thống hiển thị lỗi tại `add-product-name-error`: `Tên sản phẩm không được để trống`."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Add-3]	Kiểm tra ràng buộc Thời gian bảo hành (`tinyint > 0`)	"Tiền điều kiện: Đang mở pop-up 'Thêm sản phẩm'
+
+Các bước:
+ 1. Nhập Thời gian bảo hành = `0`
+ 2. Click nút [Thêm]"	"1. Ô bảo hành hiển thị số 0.
+2. Hệ thống báo lỗi tại `add-product-warranty-error`: `Thời gian bảo hành phải là số nguyên từ 1 đến 127 tháng`."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Add-4]	Kiểm tra trường bắt buộc Chọn Thể loại con	"Tiền điều kiện: Đang mở pop-up 'Thêm sản phẩm'
+
+Các bước:
+ 1. Bỏ qua chọn giá trị trong dropdown 'Thể loại' (`categoryId`)
+ 2. Click nút [Thêm]"	"1. Dropdown thể loại giữ nguyên mặc định chưa chọn.
+2. Hệ thống báo lỗi: `Vui lòng chọn một thể loại con`."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Add-5]	Kiểm tra trường bắt buộc Mô tả ngắn và Mô tả chi tiết	"Tiền điều kiện: Đang mở pop-up 'Thêm sản phẩm'
+
+Các bước:
+ 1. Để trống ô 'Mô tả ngắn' và 'Mô tả chi tiết'
+ 2. Click nút [Thêm]"	"1. Các ô mô tả bị để trống.
+2. Báo lỗi: `Mô tả ngắn không được để trống` và `Mô tả chi tiết không được để trống`."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Add-6]	Kiểm tra trường bắt buộc Tải lên ít nhất 1 ảnh sản phẩm	"Tiền điều kiện: Đang mở pop-up Thêm sản phẩm. 
+
+Các bước: 
+1. Nhập chữ hợp lệ 
+2. Không chọn file ảnh + Click [Thêm]"	"1. Khối tải ảnh rỗng. 
+2. Báo lỗi tại add-product-images-error: Vui lòng chọn ít nhất 1 ảnh sản phẩm."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Add-7]	Kiểm tra sản phẩm phải có ít nhất 1 biến thể	"Tiền điều kiện: Đang mở pop-up 'Thêm sản phẩm' 
+
+Các bước: 
+ 1. Nhập thông tin và tải ảnh hợp lệ 
+ 2. Xóa hết tất cả khối biến thể 
+ 3. Click nút [Thêm]"	"1. Khối biến thể bị xóa rỗng. 
+2. Hệ thống báo lỗi: Sản phẩm phải có ít nhất 1 biến thể."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-1]	Kiểm tra thêm/xóa khối nhập liệu biến thể động	"Tiền điều kiện: Đang ở form 'Thêm sản phẩm' 
+
+Các bước: 
+ 1. Click nút [Thêm biến thể] (#addVariantBtn) 
+ 2. Click nút [Xóa khối biến thể] (.removeVariant) vừa tạo"	"1. Khối nhập biến thể thứ 2 xuất hiện trên giao diện. 
+2. Khối nhập thứ 2 bị loại bỏ khỏi giao diện."	[PROD_MGT_Add-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-2]	Kiểm tra ràng buộc dữ liệu biến thể (Tên, Giá, Tồn kho)	"Tiền điều kiện: Đang nhập khối biến thể 
+
+Các bước: 
+ 1. Nhập Tên biến thể < 3 ký tự (hoặc Giá <= 0, Tồn kho < 0)
+ 2. Click nút [Thêm]"	"1. Dữ liệu hiển thị trên ô nhập. 
+2. Báo lỗi: Biến thể 1: Tên phải có ít nhất 3 ký tự, Biến thể 1: Giá phải lớn hơn 0..., Biến thể 1: Số lượng phải từ 0 trở lên."	[PROD_MGT_Variant-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-3]	Kiểm tra độ dài tối thiểu của Mã SKU biến thể (>= 2 ký tự)	"Tiền điều kiện: Đang nhập khối biến thể 
+
+Các bước: 
+ 1. Nhập Mã SKU 1 ký tự: A 
+ 2. Click nút [Thêm]"	1. Ô SKU hiển thị “A”. 2. Hệ thống báo lỗi: Biến thể 1: SKU phải có ít nhất 2 ký tự.	[PROD_MGT_Variant-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-4]	Kiểm tra trùng SKU trong cùng form tạo (Phía Client)	"Tiền điều kiện: Đang tạo sản phẩm có 2 biến thể 
+
+Các bước: 
+ 1. Nhập SKU Biến thể 1: SKU-SAME-01 
+ 2. Nhập SKU Biến thể 2: SKU-SAME-01
+ 3. Click nút [Thêm]"	"1. Hai ô SKU nhận giá trị “SKU-SAME-01”. 
+2. Client chặn gửi form và báo lỗi: SKU bị trùng trong các biến thể của form."	[PROD_MGT_Variant-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-5]	Kiểm tra trùng SKU với CSDL cửa hàng (Phía Server /check-sku)	"Tiền điều kiện: Mã SKU SKU-DB-EXIST đã có trong CSDL 
+
+Các bước: 
+ 1. Nhập SKU biến thể: SKU-DB-EXIST 
+ 2. Click nút [Thêm]"	"1. Ô SKU nhận giá trị “SKU-DB-EXIST”. 
+2. Server gọi /check-sku phát hiện trùng và báo lỗi: SKU này đã tồn tại trong kho dữ liệu."	[PROD_MGT_Variant-1]	Passed	30/10/2026	
+[PROD_MGT_Variant-6]	Kiểm tra tự động đồng bộ Giá Min/Max và Tổng tồn kho lên Sản phẩm cha	"Tiền điều kiện: Nhập Biến thể 1 (Giá 100k, Kho 10) và Biến thể 2 (Giá 200k, Kho 15) hợp lệ 
+
+Các bước: 
+ 1. Click [Thêm] sản phẩm 
+ 2. Quan sát ngoài danh sách Admin"	"1. Lưu thành công. 
+2. Sản phẩm hiển thị Tổng kho = 25 (SUM(stock)) và Phạm vi giá = 100.000 - 200.000₫ (MIN/MAX price)."	[PROD_MGT_Variant-1]	Passed	30/10/2026	
+[PROD_MGT_Edit-1]	Kiểm tra quy tắc độ dài Tên, Mô tả ngắn, Mô tả chi tiết	"Tiền điều kiện: Đang ở form Chỉnh sửa sản phẩm 
+
+Các bước: 
+ 1. Sửa Tên < 3 ký tự (Mô tả ngắn < 5, Mô tả chi tiết < 10) 
+ 2. Click nút [Cập nhật]"	"1. Dữ liệu mới nhập vào ô text. 
+2. Báo lỗi tại edit-product-name-error: Tên sản phẩm phải có ít nhất 3 ký tự., Mô tả ngắn phải có ít nhất 5 ký tự., Mô tả chi tiết phải có ít nhất 10 ký tự.."	[PROD_MGT_Edit-1]	Passed	30/10/2026	
+[PROD_MGT_Edit-2]	Kiểm tra chặn xóa ảnh đang được chọn làm Ảnh chính	"Tiền điều kiện: Ảnh 1 đang được tích chọn nút radio “Ảnh chính” 
+
+Các bước: 
+ 1. Tích chọn checkbox “Xóa” tại ảnh chính
+ 2. Kiểm tra lỗi"	"1. Checkbox xóa Ảnh 1 được tích chọn. 
+2. Báo lỗi: Không thể xóa ảnh đang được chọn làm ảnh chính.."	[PROD_MGT_Edit-1]	Passed	30/10/2026	
+[PROD_MGT_Edit-3]	Kiểm tra cập nhật Giá và Tồn kho của biến thể thành công	"Tiền điều kiện: Đang mở pop-up Chỉnh sửa biến thể 
+
+Các bước: 
+ 1. Sửa Giá = 180000, Tồn kho = 50 
+ 2. Click nút [Chấp nhận]"	"1. Dữ liệu mới hiển thị trên ô nhập. 
+2. Báo thông báo: cập nhật biến thể thành công, khoảng giá và tổng kho sản phẩm cha tự động cập nhật."	[PROD_MGT_Edit-1]	Passed	30/10/2026	
+[PROD_MGT_Edit-4]	Kiểm tra trường Mã SKU biến thể BỊ KHÓA (Read-only) khi Chỉnh sửa	"Tiền điều kiện: Đang mở pop-up Chỉnh sửa biến thể 
+
+Các bước: 
+ 1. Quan sát ô nhập Mã SKU (data-testid=""edit-variant"") 
+ 2. Thử nhấp chuột và gõ thay đổi SKU"	"1. Ô SKU hiển thị mã hiện tại. 
+2. Ô SKU ở trạng thái bị khóa (readonly=""true""), người dùng không thể sửa."	[PROD_MGT_Edit-1]	Passed	30/10/2026	
+[PROD_MGT_Status-1]	Kiểm tra chuyển đổi trạng thái sản phẩm giữa Active và Inactive	"Tiền điều kiện: Sản phẩm đang ở trạng thái Active (1) 
+
+Các bước: 
+ 1. Bỏ tích “Hiện lên website” (status) và click [Cập nhật] 
+ 2. Truy cập trang bán hàng Client kiểm tra"	"1. Cập nhật trạng thái Inactive thành công. 
+2. Sản phẩm ẩn khỏi giao diện bán hàng Client nhưng vẫn xuất hiện trên bảng Admin."	[PROD_MGT_Edit-1]	Passed	30/10/2026	
+[PROD_MGT_Delete-1]	Kiểm tra chặn xóa biến thể khi số biến thể < 2	"Tiền điều kiện: Đã mở popup xem các biến thể trong sản phẩm có tên ""VNNETLAN Cáp mạng Cat6 Pre-Press"" và sản phẩm chỉ có duy nhất 1 biến thể (sizeVariants = 1) 
+
+Các bước: 
+ 1. Click icon Xóa biến thể (.edit-product-var-remover) 
+ 2. Click [Đồng ý] trên dialog xác nhận"	1. Message lỗi xuất hiện và thông báo: Không thể xóa biến thể {id}: sản phẩm phải còn ít nhất một biến thể..	[PROD_MGT_List-1]	Passed	30/10/2026	
+[PROD_MGT_Delete-2]	Kiểm tra xóa Sản phẩm có đơn hàng (Cơ chế Snapshot đơn hàng)	"Tiền điều kiện: Sản phẩm ID 190 đã từng phát sinh đơn hàng trong quá khứ 
+
+Các bước: 
+ 1. Click icon Xóa sản phẩm ID 190
+ 2. Click [Chấp nhận] trên popup xác nhận 
+ 3. Kiểm tra Lịch sử đơn hàng cũ"	"1. Popup hỏi: Bạn có chắc muốn xóa sản phẩm [Tên] không?. 
+2. Bản ghi trong products bị xóa, product_variant_id trong order_details chuyển thành NULL. 
+3. Đơn hàng cũ vẫn hiển thị đầy đủ Tên, SKU, Giá, Màu, Size từ bản lưu Snapshot không bị mất."	[PROD_MGT_List-1]	Passed	30/10/2026	
+
+============Các test case Group06_23130309_PhanVanThi===============
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[Filter-GUI-1]	Kiểm tra giao diện và giá trị mặc định của bộ lọc sau khi tìm kiếm	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm"	Trang "Kết quả tìm kiếm" hiển thị dòng Từ khóa: "chuột" và khung "Bộ Lọc Sản Phẩm" gồm 4 danh sách chọn: Khoảng giá, Danh mục, Sắp xếp, Đánh giá cùng nút "Lọc". Giá trị mặc định lần lượt là: Tất cả, Tất cả, Mặc định, Tất cả		Passed	04/11/2026	
+[Filter-GUI-2]	Kiểm tra các lựa chọn của 4 danh sách: Khoảng giá, Danh mục, Sắp xếp, Đánh giá	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Lần lượt click mở từng danh sách ""Khoảng giá"", ""Danh mục"", ""Sắp xếp"", ""Đánh giá"" và xem các lựa chọn"	"Khoảng giá: Tất cả, Dưới 100.000đ, 100.000đ - 300.000đ, 300.000đ - 500.000đ, 500.000đ - 1.000.000đ, Trên 1.000.000đ.
+Sắp xếp: Mặc định, Giá tăng dần, Giá giảm dần, Mới nhất.
+Đánh giá: Tất cả, 5 sao, 4 sao trở lên, 3 sao trở lên, 2 sao trở lên, 1 sao trở lên.
+Danh mục: Tất cả và các danh mục cha, danh mục con thụt vào bên dưới danh mục cha tương ứng: Phụ Kiện Máy Tính (Chuột Máy Tính, Bàn Phím, Túi Chống Sốc); Phụ Kiện Điện Thoại (Củ sạc, Ốp Lưng, Sạc Dự Phòng); Dây Cáp Tín Hiệu (Cáp HDMI, Cáp VGA); Bộ Chia Tín Hiệu (Bộ Chia AV, Bộ Chia VGA); Phụ Kiện Xe (Phụ Kiện Xe Đạp, Phụ Kiện Ô Tô); Thiết Bị Mạng (Máy Test Mạng, Dây Cáp Mạng); Thiết Bị Ngoại Vi (Phụ Kiện Đàn Ghi-ta, Thiết Bị Nhập Cảm Biến); Bộ Chuyển Đổi Tín Hiệu (Chuyển Đổi HDMI, Chuyển Đổi VGA)"		Passed	04/11/2026	
+[Filter-Price-1]	Lọc kết quả tìm kiếm theo khoảng giá "Dưới 100.000đ"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""Dưới 100.000đ""
+3. Nhấn nút ""Lọc"""	Chỉ hiển thị sản phẩm thuộc kết quả tìm "chuột" có giá <100.000đ; danh sách phải khớp với các sản phẩm thỏa điều kiện trong kết quả ban đầu. Nếu không có sản phẩm phù hợp, hiển thị trạng thái không có kết quả.		Passed	04/11/2026	
+[Filter-Price-2]	Lọc kết quả tìm kiếm theo khoảng giá "100.000đ - 300.000đ"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""100.000đ - 300.000đ""
+3. Nhấn nút ""Lọc"""	Chỉ hiển thị sản phẩm thuộc kết quả tìm "chuột" có giá từ 100.000đ đến 300.000đ; danh sách phải khớp với các sản phẩm thỏa điều kiện trong kết quả ban đầu. Nếu không có sản phẩm phù hợp, hiển thị trạng thái không có kết quả.		Passed	04/11/2026	
+[Filter-Price-3]	Lọc kết quả tìm kiếm theo khoảng giá "300.000đ - 500.000đ"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""300.000đ - 500.000đ""
+3. Nhấn nút ""Lọc"""	Chỉ hiển thị sản phẩm thuộc kết quả tìm "chuột" có giá từ 300.000đ đến 500.000đ; danh sách phải khớp với các sản phẩm thỏa điều kiện trong kết quả ban đầu. Nếu không có sản phẩm phù hợp, hiển thị trạng thái không có kết quả.		Passed	04/11/2026	
+[Filter-Price-4]	Lọc kết quả tìm kiếm theo khoảng giá "500.000đ - 1.000.000đ"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""500.000đ - 1.000.000đ""
+3. Nhấn nút ""Lọc"""	Chỉ hiển thị sản phẩm thuộc kết quả tìm "chuột" có giá từ 500.000đ đến 1.000.000đ; danh sách phải khớp với các sản phẩm thỏa điều kiện trong kết quả ban đầu. Nếu không có sản phẩm phù hợp, hiển thị trạng thái không có kết quả.		Passed	04/11/2026	
+[Filter-Price-5]	Lọc kết quả tìm kiếm theo khoảng giá "Trên 1.000.000đ"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""Trên 1.000.000đ""
+3. Nhấn nút ""Lọc"""	Chỉ hiển thị sản phẩm thuộc kết quả tìm "chuột" có giá >1.000.000đ; danh sách phải khớp với các sản phẩm thỏa điều kiện trong kết quả ban đầu. Nếu không có sản phẩm phù hợp, hiển thị trạng thái không có kết quả.		Passed	04/11/2026	
+[Filter-Price-6]	Kiểm tra mốc 100.000đ không bị lọt hoặc trùng giữa hai khoảng giá	"Pre-condition:
++ Website hoạt động tại localhost:8080 và dữ liệu sản phẩm mẫu đã được nạp.
++ Từ khóa ""mạng"" trả về ít nhất một sản phẩm có giá 100.000đ.
+Step:
+1. Tìm ""mạng"" và ghi lại ID các sản phẩm có giá 100.000đ.
+2. Chọn ""Dưới 100.000đ"", nhấn ""Lọc"" và ghi lại các ID đó có xuất hiện hay không.
+3. Chọn ""100.000đ - 300.000đ"", nhấn ""Lọc"" và ghi lại các ID đó có xuất hiện hay không."	Mỗi sản phẩm giá đúng 100.000đ không xuất hiện trong khoảng "Dưới 100.000đ" và xuất hiện trong khoảng "100.000đ - 300.000đ"; không bị mất hoặc xuất hiện trùng.		Failed	04/11/2026	Dữ liệu mẫu hiện có sản phẩm giá 100.000đ khớp từ khóa "mạng" (bao gồm tên có dấu gần giống do collation không phân biệt dấu). Không bỏ qua case nếu dữ liệu mẫu thiếu.
+[Filter-Price-7]	Lọc khoảng giá đã xác định không có sản phẩm khớp với từ khóa	"Pre-condition:
++ Website hoạt động tại localhost:8080 và dữ liệu sản phẩm mẫu đã được nạp.
++ Với từ khóa ""mạng"", không có sản phẩm giá từ 300.000đ đến 500.000đ.
+Step:
+1. Tìm ""mạng"".
+2. Tại ""Khoảng giá"", chọn ""300.000đ - 500.000đ"".
+3. Nhấn ""Lọc""."	Không có card sản phẩm; hiển thị thông báo không tìm thấy sản phẩm phù hợp; bộ lọc vẫn hiển thị và trang không lỗi.		Passed	04/11/2026	Khoảng 300.000đ - 500.000đ được chọn cố định theo dữ liệu mẫu, không dò khoảng trống rồi skip.
+[Filter-Category-1]	Lọc kết quả tìm kiếm theo danh mục con "Chuột Máy Tính"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Danh mục"" chọn ""Chuột Máy Tính""
+3. Nhấn nút ""Lọc"""	Danh sách chỉ hiển thị các sản phẩm chứa từ khóa "chuột" thuộc danh mục "Chuột Máy Tính"		Passed	04/11/2026	
+[Filter-Category-2]	Lọc kết quả tìm kiếm theo danh mục cha "Phụ Kiện Máy Tính"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Danh mục"" chọn ""Phụ Kiện Máy Tính""
+3. Nhấn nút ""Lọc"""	Danh sách hiển thị các sản phẩm chứa từ khóa "chuột" thuộc "Phụ Kiện Máy Tính" và các danh mục con của nó (Chuột Máy Tính, Bàn Phím, Túi Chống Sốc)		Failed	04/11/2026	Đối chiếu yêu cầu về phạm vi của danh mục cha
+[Filter-Sort-1]	Sắp xếp kết quả tìm kiếm theo "Giá tăng dần"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Sắp xếp"" chọn ""Giá tăng dần""
+3. Nhấn nút ""Lọc"""	Các sản phẩm được sắp xếp theo giá từ thấp đến cao		Passed	04/11/2026	
+[Filter-Sort-2]	Sắp xếp kết quả tìm kiếm theo "Giá giảm dần"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Sắp xếp"" chọn ""Giá giảm dần""
+3. Nhấn nút ""Lọc"""	Các sản phẩm được sắp xếp theo giá từ cao đến thấp		Passed	04/11/2026	
+[Filter-Sort-3]	Sắp xếp kết quả tìm kiếm theo "Mới nhất"	"Pre-condition:
++ Website hoạt động tại localhost:8080; dữ liệu mẫu sản phẩm mạng đã được nạp.
+Step:
+1. Tìm từ khóa ""mạng"".
+2. Tại ""Sắp xếp"", chọn ""Mới nhất"".
+3. Nhấn ""Lọc""."	Sản phẩm được sắp theo create_date giảm dần. Với dữ liệu mẫu hiện tại, thứ tự ID là 52, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 2, 1.		Passed	04/11/2026	Không suy ra ngày tạo từ ID. Từ khóa "mạng" có thể khớp cả "màng" do collation không phân biệt dấu; sản phẩm ID 52 mới hơn các sản phẩm còn lại trong fixture.
+[Filter-Rating-1]	Lọc kết quả tìm kiếm theo đánh giá "5 sao"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Đánh giá"" chọn ""5 sao""
+3. Nhấn nút ""Lọc"""	Danh sách chứa từ khóa "chuột" và chỉ hiển thị các sản phẩm có đánh giá 5 sao		Passed	04/11/2026	
+[Filter-Rating-2]	Lọc kết quả tìm kiếm theo đánh giá "4 sao trở lên"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Đánh giá"" chọn ""4 sao trở lên""
+3. Nhấn nút ""Lọc"""	Danh sách chứa từ khóa "chuột" và hiển thị các sản phẩm có đánh giá từ 4 sao trở lên		Passed	04/11/2026	
+[Filter-Rating-3]	Lọc kết quả tìm kiếm theo đánh giá "1 sao trở lên"	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Đánh giá"" chọn ""1 sao trở lên""
+3. Nhấn nút ""Lọc"""	Danh sách chứa từ khóa "chuột" và hiển thị các sản phẩm có đánh giá từ 1 sao trở lên		Passed	04/11/2026	Đối chiếu yêu cầu: sản phẩm chưa có đánh giá có hiển thị hay không
+[Filter-Combine-1]	Kết hợp lọc theo khoảng giá và danh mục	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""100.000đ - 300.000đ""
+3. Tại ""Danh mục"" chọn ""Chuột Máy Tính""
+4. Nhấn nút ""Lọc"""	Danh sách chỉ hiển thị các sản phẩm chứa từ khóa "chuột", thuộc danh mục "Chuột Máy Tính" và có giá từ 100.000đ đến 300.000đ		Passed	04/11/2026	
+[Filter-Combine-2]	Kết hợp lọc theo khoảng giá và sắp xếp theo giá	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""300.000đ - 500.000đ""
+3. Tại ""Sắp xếp"" chọn ""Giá tăng dần""
+4. Nhấn nút ""Lọc"""	Danh sách chỉ hiển thị các sản phẩm có giá từ 300.000đ đến 500.000đ và được sắp xếp theo giá từ thấp đến cao		Passed	04/11/2026	
+[Filter-Combine-3]	Kết hợp lọc danh mục và đánh giá trên dữ liệu có review	"Pre-condition:
++ Website hoạt động tại localhost:8080; dữ liệu mẫu có sản phẩm mạng thuộc danh mục ""Dây Cáp Mạng"" và có review.
+Step:
+1. Tìm từ khóa ""mạng"".
+2. Chọn danh mục ""Dây Cáp Mạng"".
+3. Chọn đánh giá ""4 sao trở lên"".
+4. Nhấn ""Lọc""."	Mỗi sản phẩm thuộc danh mục "Dây Cáp Mạng" và có đánh giá trung bình từ 4 sao trở lên; theo dữ liệu mẫu, ID kết quả là 6, 7, 9, 10, 11, 12, 13.		Passed	04/11/2026	Dùng bộ dữ liệu có review thay vì từ khóa "chuột" vì sản phẩm chuột trong dữ liệu mẫu chưa có review.
+[Filter-Combine-4]	Kết hợp đồng thời cả 4 bộ lọc: khoảng giá, danh mục, sắp xếp, đánh giá	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""100.000đ - 300.000đ""
+3. Tại ""Danh mục"" chọn ""Chuột Máy Tính""
+4. Tại ""Sắp xếp"" chọn ""Giá giảm dần""
+5. Tại ""Đánh giá"" chọn ""3 sao trở lên""
+6. Nhấn nút ""Lọc"""	Danh sách chỉ hiển thị các sản phẩm thỏa đồng thời: thuộc "Chuột Máy Tính", giá từ 100.000đ đến 300.000đ, đánh giá từ 3 sao trở lên và được sắp xếp theo giá từ cao đến thấp		Passed	04/11/2026	
+[Filter-Combine-5]	Kết hợp các bộ lọc nhưng không có sản phẩm nào thỏa điều kiện	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa ""chuột"" vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Danh mục"" chọn ""Bộ Chia VGA""
+3. Tại ""Khoảng giá"" chọn ""Dưới 100.000đ""
+4. Tại ""Đánh giá"" chọn ""5 sao""
+5. Nhấn nút ""Lọc"""	Không hiển thị sản phẩm nào, trang hiển thị thông báo không tìm thấy sản phẩm phù hợp và không bị lỗi		Passed	04/11/2026	
+[Filter-Combine-6]	Kiểm tra từ khóa tìm kiếm được giữ nguyên sau khi lọc	"Pre-condition:
++ Website hoạt động tại localhost:8080 và có sản phẩm khớp từ khóa ""chuột"".
+Step:
+1. Tìm từ khóa ""chuột"".
+2. Chọn khoảng giá ""100.000đ - 300.000đ"".
+3. Nhấn ""Lọc""."	Từ khóa "chuột" được giữ trong input ẩn của form bộ lọc và trong dòng tóm tắt "Từ khóa"; tất cả sản phẩm kết quả vẫn thuộc tập kết quả tìm "chuột" ban đầu.		Passed	04/11/2026	Không kiểm tra input tìm kiếm trên header: trang kết quả không tự điền giá trị vào input này.
+[Filter-Combine-7]	Dùng bộ lọc khi từ khóa tìm kiếm không có kết quả	"Pre-condition:
++ Truy cập được website (localhost:8080)
++ Có sản phẩm khớp với từ khóa ""chuột""
+Step:
+1. Nhập từ khóa không tồn tại (ví dụ ""abcxyz"") vào ô ""Tìm kiếm sản phẩm..."" và nhấn biểu tượng tìm kiếm
+2. Tại ""Khoảng giá"" chọn ""Dưới 100.000đ""
+3. Nhấn nút ""Lọc"""	Không hiển thị sản phẩm nào, trang hiển thị thông báo không tìm thấy sản phẩm phù hợp, bộ lọc vẫn hiển thị và không bị lỗi		Passed	04/11/2026	
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[Add-DeliveryAddress-1]	Thêm địa chỉ giao hàng với nội dung đầy đủ	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Nhập đầy đủ các trường thông tin: Họ và tên, Số điện thoại, Tỉnh/Thành, Địa chỉ chi tiết.
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng đã thêm được hiển thị ở danh sách địa chỉ giao hàng với đúng các trường dữ liệu đã nhập		Passed	23/10/2026	
+[Add-DeleveryAddress-2]	Thêm địa chỉ giao hàng mới nội dung trông (các trường dữ liệu không điền gì)	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Không nhập nội dung vào các trường dữ liệu
+4. Nhấn ""Hoàn thành""."	Trang hiển thị thông báo cần nhập các trường nội dung bắt buộc.		Failed	23/10/2026	
+[Add-DeleveryAddress-3]	Thêm địa chỉ giao hàng chỉ với 1 trường dữ liệu là "Họ và tên"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập nội dung trong trường ""Họ và tên""
+4. Nhấn ""Hoàn thành""."	Trang hiển thị thông báo cần nhập các trường nội dung bắt buộc.		Failed	23/10/2026	
+[Add-DeliveryAddress-4]	Thêm địa chỉ giao hàng với đầy đủ trường dữ liệu nhưng bỏ "Họ và tên"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập các trường thông tin: Số điện thoại, Tỉnh/Thành, Địa chỉ chi tiết.
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng đã thêm được hiển thị ở danh sách địa chỉ giao hàng với đúng các trường dữ liệu đã nhập		Passed	23/10/2026	
+[Add-DeliveryAddress-5]	Thêm địa chỉ giao hàng chỉ với 1 trường dữ liệu là "Số điện thoại"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập nội dung trong trường ""Số điện thoại""
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng đã thêm được hiển thị ở danh sách địa chỉ giao hàng nhưng chỉ hiển thị đúng trường dữ liệu "Số điện thoại" đã nhập		Passed	23/10/2026	
+[Add-DeliveryAddress-6]	Thêm địa chỉ giao hàng với đầy đủ trường dữ liệu nhưng bỏ "Số điện thoại"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập các trường thông tin: Họ và tên, Tỉnh/Thành, Địa chỉ chi tiết.
+4. Nhấn ""Hoàn thành""."	Trang hiển thị thông báo cần nhập các trường nội dung bắt buộc.		Failsed	23/10/2026	
+[Add-DeliveryAddress-7]	Thêm địa chỉ giao hàng nhưng với trường "Số điện thoại" không đúng định dang (số lượng số chưa đúng, dữ liệu có text, ký tự đặc biệt)	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Nhập đầy đủ các trường thông tin: Họ và tên, Số điện thoại, Tỉnh/Thành, Địa chỉ chi tiết. Nhưng ""Số điện thoại"" nhập sai định dạng
+4. Nhấn ""Hoàn thành""."	Bên dưới trường "Số điện thoại" hiện thông báo nhập sai định dạng, yêu cầu nhập lại		Failsed	23/10/2026	
+[Add-DeliveryAddress-8]	Thêm địa chỉ giao hàng chỉ với Tỉnh/Thành phố	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ chọn nội dung Tỉnh/Thành phố
+4. Nhấn ""Hoàn thành""."	Trang hiển thị thông báo cần nhập các trường nội dung bắt buộc.		Failsed	23/10/2026	
+[Add-DeliveryAddress-9]	Thêm địa chỉ giao hàng với đầy đủ trường dữ liệu nhưng bỏ "Tỉnh/Thành phố"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập các trường thông tin: Họ và tên, Số điện thoai, Địa chỉ chi tiết.
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng đã thêm được hiển thị ở danh sách địa chỉ giao hàng với đúng các trường dữ liệu đã nhập		Passed	23/10/2026	
+[Add-DeliveryAddress-10]	Thêm địa chỉ giao hàng chỉ với Địa chỉ chi tiết	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ điền nội dùng ""Địa chỉ chi tiết""
+4. Nhấn ""Hoàn thành""."	Trang hiển thị thông báo cần nhập các trường nội dung bắt buộc.		Failsed	23/10/2026	
+[Add-DeliveryAddress-11]	Thêm địa chỉ giao hàng với đầy đủ trường dữ liệu nhưng bỏ "Địa chỉ chi tiết"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Chỉ nhập các trường thông tin: Họ và tên, Số điện thoai, Tỉnh/Thành phố
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng đã thêm được hiển thị ở danh sách địa chỉ giao hàng với đúng các trường dữ liệu đã nhập		Passed	23/10/2026	
+[Add-DeliveryAddress-12]	Thêm địa chỉ giao hàng với đầy đủ các trường thông tin nhưng không nhấn "Hoàn thành" mà nhấn "Trở lại"	"Pre-condition:
++ Đăng nhập thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Thêm địa chỉ mới""
+3. Nhập đầy đủ các trường thông tin
+4. Nhấn ""Trở lại""."	Thông tin địa chỉ giao hàng không được thêm và không hiển thị ngoài danh sách		Passed	23/10/2026	
+[Update-DeliveryAddress-1]	Cập nhật địa chỉ giao hàng với tất cả các trường dữ liệu	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Nhập lại đầy đủ các trường thông tin mới
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng được cập nhật thành công và hiển thị ngoài danh sách với đúng nội dung những gì đã cập nhật	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Update-DeliveryAddress-2]	Cập nhật địa chỉ giao hàng nhưng không thay đổi nội dung gì	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Không sửa lại nội dung gì
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng vẫn như cũ.	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Update-DeliveryAddress-3]	Cập nhật địa chỉ giao hàng chỉ với trường Họ và tên, các trường khác giữ nguyên.	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Chỉ sửa lại nội dung trường Họ và tên
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng được cập nhật thành công và hiển thị ngoài danh sách với đúng nội dung những gì đã cập nhật	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Update-DeliveryAddress-4]	Cập nhật địa chỉ giao hàng chỉ với trường Số điện thoại, các trường khác giữ nguyên.	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Chỉ sửa lại nội dung trường Số điện thoại
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng được cập nhật thành công và hiển thị ngoài danh sách với đúng nội dung những gì đã cập nhật	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Update-DeliveryAddress-5]	Cập nhật địa chỉ giao hàng chỉ với trường Tỉnh/Thành , các trường khác giữ nguyên.	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Chỉ sửa lại nội dung trường Tỉnh/Thành phố
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng được cập nhật thành công và hiển thị ngoài danh sách với đúng nội dung những gì đã cập nhật	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Update-DeliveryAddress-6]	Cập nhật địa chỉ giao hàng chỉ với trường Địa chỉ chi tiết, các trường khác giữ nguyên.	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Cập nhật""
+3. Chỉ sửa lại nội dung trường Địa chỉ chi tiết
+4. Nhấn ""Hoàn thành""."	Thông tin địa chỉ giao hàng được cập nhật thành công và hiển thị ngoài danh sách với đúng nội dung những gì đã cập nhật	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Delete-DeliveryAddress-1]	Xóa địa chỉ giao hàng	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Xóa""
+3. Khi hộp thoại thông báo xác nhận hiện ra nhấn ""Ok"""	Địa chỉ giao hàng được xóa thành công và biến mất khỏi danh sách địa chỉ.	Add-DeliveryAddress-1	Passed	23/10/2026	
+[Delete-DeliveryAddress-2]	Xóa địa chỉ giao hàng nhưng không xác nhận	"Pre-condition:
++ Đăng nhập thành công
++ Đã thêm địa chỉ giao hàng thành công
+Step:
+1. Click vào avatar/username góc trên bên phải để vào trang hồ sơ
+2. Trong sidebar bên phải chọn ""Địa chỉ"" -> Chọn ""Xóa""
+3. Khi hộp thoại thông báo xác nhận hiện ra nhấn ""Cancel"""	Địa chỉ giao hàng vẫn còn với nội dung như cũ.	Add-DeliveryAddress-1	Passed	23/10/2026	
+
+===========Các test case Group06_23130081_TranQuangDuy=============
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[USER_MGT_List-1]	Kiểm tra giao diện màn hình Quản lý khóa người dùng	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ
+
+Các bước:
+ 1. Truy cập trang Quản lý khóa người dùng"	1. Hiển thị bảng gồm các cột: Tên khóa, Thuật toán, Trạng thái, Ngày tạo, Thao tác và nút [Thêm khóa mới].	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_List-2]	Kiểm tra hiển thị danh sách tất cả khóa của người dùng	"Tiền điều kiện: Người dùng có 1 khóa ACTIVE và 1 khóa REVOKED
+
+Các bước:
+ 1. Truy cập trang Quản lý khóa người dùng"	1. Danh sách hiển thị đủ 2 khóa, mỗi khóa có đúng Tên khóa, Thuật toán, Trạng thái (ACTIVE / REVOKED) và Ngày tạo.	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_List-3]	Kiểm tra hiển thị khóa đã bị thu hồi	"Tiền điều kiện: Người dùng có 1 khóa REVOKED
+
+Các bước:
+ 1. Truy cập trang Quản lý khóa người dùng
+ 2. Quan sát khóa REVOKED trong danh sách"	"1. Danh sách khóa được tải thành công.
+2. Khóa REVOKED hiển thị nhãn `Đã hủy` cùng thời gian thu hồi (`revoked_at`), có kiểu hiển thị khác với khóa ACTIVE."	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_List-4]	Kiểm tra hiển thị khi người dùng chưa có khóa	"Tiền điều kiện: Người dùng chưa có khóa nào trong hệ thống
+
+Các bước:
+ 1. Truy cập trang Quản lý khóa người dùng"	1. Danh sách khóa trống, hệ thống không báo lỗi.	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_List-5]	Kiểm tra người dùng chỉ có tối đa 1 khóa ACTIVE	"Tiền điều kiện: Người dùng đã thu hồi khóa cũ và thêm 1 khóa mới thành công
+
+Các bước:
+ 1. Truy cập trang Quản lý khóa người dùng
+ 2. Đếm số khóa có trạng thái ACTIVE"	"1. Danh sách khóa được tải thành công.
+2. Chỉ có đúng 1 khóa ACTIVE, các khóa cũ có trạng thái REVOKED."	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-1]	Kiểm tra giao diện và giá trị mặc định popup Thêm khóa mới	"Tiền điều kiện: Đang ở trang Quản lý khóa người dùng
+
+Các bước:
+ 1. Click nút [Thêm khóa mới]"	1. Popup Thêm khóa mới hiển thị với các trường Tên khóa, Thuật toán, Public key để trống và nút [Lưu].	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-2]	Kiểm tra thêm khóa mới thành công khi chưa có khóa	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ, người dùng chưa có khóa nào
+
+Các bước:
+ 1. Click nút [Thêm khóa mới]
+ 2. Nhập Tên khóa: `TestKey001`
+ 3. Chọn Thuật toán: `RSA`
+ 4. Dán public key RSA hợp lệ (định dạng PEM) vào ô Public key
+ 5. Click nút [Lưu]"	"1. Popup Thêm khóa mới mở ra.
+2. Ô Tên khóa nhận giá trị ""TestKey001"", không báo lỗi.
+3. Ô Thuật toán hiển thị `RSA`.
+4. Ô Public key nhận dữ liệu, không báo lỗi.
+5. Lưu thành công, khóa `TestKey001` xuất hiện trong danh sách với trạng thái `ACTIVE`."	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-3]	Kiểm tra thêm khóa mới thành công sau khi đã thu hồi khóa cũ	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ, người dùng chỉ có khóa REVOKED (không có khóa ACTIVE)
+
+Các bước:
+ 1. Click nút [Thêm khóa mới]
+ 2. Nhập Tên khóa: `TestKey002`, chọn Thuật toán `RSA` và dán public key RSA hợp lệ (định dạng PEM) chưa tồn tại trong hệ thống
+ 3. Click nút [Lưu]"	"1. Popup Thêm khóa mới mở ra.
+2. Các trường nhận dữ liệu, không báo lỗi.
+3. Lưu thành công, khóa `TestKey002` có trạng thái `ACTIVE`, khóa REVOKED cũ giữ nguyên trạng thái."	[USER_MGT_Revoke-2]	Untested	 23/10/2026	 
+[USER_MGT_Create-4]	Kiểm tra trường bắt buộc Tên khóa	"Tiền điều kiện: Đã đăng nhập, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Để trống trường Tên khóa
+ 2. Chọn Thuật toán `RSA`, dán public key RSA hợp lệ (định dạng PEM) và click [Lưu]"	"1. Trường Tên khóa ở trạng thái rỗng.
+2. Hệ thống báo lỗi: `Tên khóa không được để trống`, khóa không được tạo, form không được gửi."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-5]	Kiểm tra trường bắt buộc Thuật toán	"Tiền điều kiện: Đã đăng nhập, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey003`, không chọn giá trị Thuật toán
+ 2. Dán public key RSA hợp lệ (định dạng PEM) và click [Lưu]"	"1. Ô Tên khóa nhận dữ liệu, ô Thuật toán giữ giá trị mặc định chưa chọn.
+2. Hệ thống báo lỗi: `Algorithm không hợp lệ`, khóa không được tạo."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-6]	Kiểm tra trường bắt buộc Public key	"Tiền điều kiện: Đã đăng nhập, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey004`, chọn Thuật toán `RSA`, để trống ô Public key
+ 2. Click nút [Lưu]"	"1. Các trường Tên khóa, Thuật toán nhận dữ liệu, ô Public key ở trạng thái rỗng.
+2. Hệ thống báo lỗi: `Public key không được để trống`, khóa không được tạo, form không được gửi."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-7]	Kiểm tra Public key sai định dạng	"Tiền điều kiện: Đã đăng nhập, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey005`, chọn Thuật toán `RSA`
+ 2. Nhập vào ô Public key chuỗi sai định dạng: `khong-phai-public-key-123456789` và click [Lưu]"	"1. Các trường Tên khóa, Thuật toán nhận dữ liệu.
+2. Hệ thống báo lỗi: `Public key không đúng định dạng`, khóa không được tạo."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-8]	Kiểm tra Public key quá ngắn	"Tiền điều kiện: Đã đăng nhập, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey006`, chọn Thuật toán `RSA`
+ 2. Nhập vào ô Public key giá trị `AB` và click [Lưu]"	"1. Các trường Tên khóa, Thuật toán nhận dữ liệu.
+2. Ô Public key hiển thị ""AB"", hệ thống báo lỗi: `Public key quá ngắn`, khóa không được tạo."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-9]	Kiểm tra Tên khóa trùng lặp	"Tiền điều kiện: Đã đăng nhập, người dùng đã có 1 khóa REVOKED tên `MyKey` và chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `MyKey`
+ 2. Chọn Thuật toán `RSA`, dán public key RSA hợp lệ (định dạng PEM) chưa tồn tại trong hệ thống và click [Lưu]"	"1. Ô Tên khóa nhận giá trị ""MyKey"".
+2. Hệ thống báo lỗi: `Tên khóa đã tồn tại cho user này`, khóa mới không được tạo, khóa `MyKey` cũ giữ nguyên."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-10]	Kiểm tra không thể thêm khóa khi đang có khóa ACTIVE	"Tiền điều kiện: Đã đăng nhập, người dùng đang có 1 khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey007`, chọn Thuật toán `RSA`, dán public key RSA hợp lệ (định dạng PEM) chưa tồn tại trong hệ thống
+ 2. Click nút [Lưu]"	"1. Các trường nhận dữ liệu, không báo lỗi.
+2. Hệ thống báo lỗi: `Bạn đang có 1 khóa đang hoạt động, vui lòng thu hồi khóa đó nếu muốn thêm khóa mới`, khóa mới không được tạo, khóa ACTIVE hiện tại giữ nguyên."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-11]	Kiểm tra trùng Public key trong hệ thống	"Tiền điều kiện: Đã đăng nhập, một Public key đã tồn tại trong CSDL, người dùng chưa có khóa ACTIVE, đang mở popup Thêm khóa mới
+
+Các bước:
+ 1. Nhập Tên khóa: `TestKey008`, chọn Thuật toán `RSA`
+ 2. Dán Public key đã tồn tại trong CSDL và click [Lưu]"	"1. Các trường Tên khóa, Thuật toán nhận dữ liệu.
+2. Hệ thống báo lỗi: `Khóa này đã có trong hệ thống, vui lòng thử lại khóa khác`, khóa mới không được tạo, khóa đã có giữ nguyên."	[USER_MGT_Create-1]	Untested	 23/10/2026	 
+[USER_MGT_Create-12]	Kiểm tra thêm khóa cho người dùng không tồn tại	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ; không có người dùng có ID = `999999`
+
+Các bước:
+ 1. Gửi yêu cầu thêm khóa với `userId = 999999` và các trường Tên khóa, Thuật toán, Public key hợp lệ"	1. Hệ thống báo lỗi: `User không tồn tại trong hệ thống`, khóa không được tạo.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_Revoke-1]	Kiểm tra popup xác nhận thu hồi khóa	"Tiền điều kiện: Đã đăng nhập, người dùng có 1 khóa ACTIVE
+
+Các bước:
+ 1. Click nút [Báo mất khóa] tại khóa ACTIVE"	1. Popup xác nhận thu hồi khóa hiển thị.	[USER_MGT_List-1]	Untested	 23/10/2026	 
+[USER_MGT_Revoke-2]	Kiểm tra thu hồi khóa thành công	"Tiền điều kiện: Đã đăng nhập, người dùng có 1 khóa ACTIVE
+
+Các bước:
+ 1. Click nút [Báo mất khóa] tại khóa ACTIVE
+ 2. Click nút xác nhận trên popup"	"1. Popup xác nhận thu hồi khóa hiển thị.
+2. Thu hồi thành công, khóa chuyển từ `ACTIVE` sang `REVOKED`, hiển thị nhãn `Đã hủy` và thời gian thu hồi (`revoked_at`)."	[USER_MGT_Revoke-1]	Untested	 23/10/2026	 
+[USER_MGT_Revoke-3]	Kiểm tra thu hồi khóa không tồn tại	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ; không có khóa có ID = `0`
+
+Các bước:
+ 1. Gửi yêu cầu thu hồi khóa với `keyId = 0`"	1. Hệ thống báo lỗi: `Khóa không tồn tại`, dữ liệu khóa không thay đổi.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_Revoke-4]	Kiểm tra thu hồi khóa đã bị thu hồi	"Tiền điều kiện: Đã đăng nhập, người dùng có 1 khóa REVOKED
+
+Các bước:
+ 1. Gửi yêu cầu thu hồi khóa với `keyId` của khóa REVOKED"	1. Hệ thống báo lỗi: `Khóa không tồn tại`, khóa vẫn giữ trạng thái `REVOKED`, thời gian thu hồi không đổi.	[USER_MGT_Revoke-2]	Untested	 23/10/2026	 
+[USER_MGT_Revoke-5]	Kiểm tra thu hồi khóa cho người dùng không tồn tại	"Tiền điều kiện: Đã đăng nhập tài khoản người dùng hợp lệ; không có người dùng có ID = `999999`
+
+Các bước:
+ 1. Gửi yêu cầu thu hồi khóa với `userId = 999999` và `keyId` hợp lệ"	1. Hệ thống báo lỗi: `User không tồn tại`, không khóa nào bị thu hồi.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_Access-1]	Kiểm tra truy cập trang Quản lý khóa khi chưa đăng nhập	"Tiền điều kiện: Chưa đăng nhập (phiên hết hạn hoặc phiên mới)
+
+Các bước:
+ 1. Truy cập trực tiếp trang Quản lý khóa người dùng"	1. Hệ thống chuyển hướng về trang đăng nhập, không cho phép thao tác với khóa.	Không có	Untested	 23/10/2026	 
+[USER_MGT_Access-2]	Kiểm tra xem khóa của người dùng khác	"Tiền điều kiện: Đã đăng nhập bằng tài khoản User A; User B có khóa trong hệ thống
+
+Các bước:
+ 1. Gửi yêu cầu lấy danh sách khóa với `userId` của User B"	1. Hệ thống từ chối: `Bạn không có quyền truy cập khóa này`, không trả về dữ liệu khóa của User B.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_Access-3]	Kiểm tra thu hồi khóa của người dùng khác	"Tiền điều kiện: Đã đăng nhập bằng tài khoản User A; User B có 1 khóa ACTIVE
+
+Các bước:
+ 1. Gửi yêu cầu thu hồi khóa với `keyId` của User B"	1. Hệ thống từ chối: `Bạn không có quyền truy cập khóa này`, khóa của User B vẫn `ACTIVE`.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+[USER_MGT_Access-4]	Kiểm tra thêm khóa cho người dùng khác	"Tiền điều kiện: Đã đăng nhập bằng tài khoản User A; User B tồn tại, chưa có khóa ACTIVE
+
+Các bước:
+ 1. Gửi yêu cầu thêm khóa với `userId` của User B và các trường hợp lệ"	1. Hệ thống từ chối: `Bạn không có quyền truy cập khóa này`, khóa không được tạo cho User B.	Đăng nhập tài khoản người dùng	Untested	 23/10/2026	 
+
+
+==============Các test case Group06_23130333_NguyenTrongTin=============
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[ADM_SHOP_AUTH-01]	Kiểm tra chặn truy cập GET /admin/shop-info khi chưa đăng nhập	"Tiền điều kiện: Chưa đăng nhập.
+
+
+
+Các bước:
+
+
+1. Truy cập URL /admin/shop-info."	Chuyển hướng tự động về trang /login.	None	Passed	10/24/2026	Security Check
+[ADM_SHOP_AUTH-02]	Kiểm tra chặn truy cập khi tài khoản bị khóa/xóa khỏi CSDL	"Tiền điều kiện: Đang có session Admin, nhưng Admin khác vừa khóa/xóa tài khoản này trong DB.
+
+
+
+Các bước:
+
+
+1. Reload hoặc gửi request GET /admin/shop-info."	Session bị xóa (invalidate). Chuyển hướng về trang /login.	None	Passed	10/24/2026	Session Clean
+[ADM_SHOP_AUTH-03]	Kiểm tra chặn người dùng vai trò Customer (role=2) truy cập trang Admin Shop	"Tiền điều kiện: Đã đăng nhập tài khoản Customer (role=2).
+
+
+
+Các bước:
+
+
+1. Truy cập URL /admin/shop-info."	Trả về mã lỗi/màn hình 404 Not Found.	None	Passed	10/24/2026	RBAC Check
+[ADM_SHOP_VIEW-01]	Kiểm tra hiển thị danh sách cửa hàng mặc định (Sắp xếp ID giảm dần)	"Tiền điều kiện: Đã đăng nhập tài khoản Admin (role=1), DB có nhiều cửa hàng.
+
+
+
+Các bước:
+
+
+1. Truy cập /admin/shop-info."	Hiển thị giao diện danh sách cửa hàng. Dữ liệu được sắp xếp theo ID giảm dần (ORDER BY id DESC).	None	Passed	10/24/2026	Default View
+[ADM_SHOP_SRCH-01]	Kiểm tra tìm kiếm chính xác cửa hàng theo Mã ID hoặc Số điện thoại	"Tiền điều kiện: DB có shop ID 5, SĐT 0901234567.
+
+
+
+Các bước:
+
+
+1. Nhập 5 hoặc 0901234567 vào ô tìm kiếm (q).
+
+
+2. Nhấn Tìm kiếm."	Hiển thị đúng shop có ID là 5 hoặc SĐT trùng khớp. Báo đúng số lượng kết quả.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Exact Search
+[ADM_SHOP_SRCH-02]	Kiểm tra tìm kiếm tương đối theo Tên, Địa chỉ, Email, MXH	"Tiền điều kiện: DB có shop tên ""Chi nhánh Cầu Giấy"".
+
+
+
+Các bước:
+
+
+1. Nhập từ khóa ""Cầu Giấy"" vào ô tìm kiếm (q).
+
+
+2. Nhấn Tìm kiếm."	Hiển thị danh sách các shop có thông tin chứa cụm từ "Cầu Giấy".	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Fuzzy Search
+[ADM_SHOP_SRCH-03]	Kiểm tra tìm kiếm với từ khóa không tồn tại trong CSDL	"Tiền điều kiện: Không có shop nào chứa từ khóa ""XYZ123"".
+
+
+
+Các bước:
+
+
+1. Nhập ""XYZ123"" vào ô tìm kiếm.
+
+
+2. Nhấn Tìm kiếm."	Hiển thị bảng rỗng, hiển thị số kết quả tìm thấy là 0.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Negative Search
+[ADM_SHOP_CREATE-01]	"Tiền điều kiện: Đang ở trang tạo mới cửa hàng.
+
+
+
+Các bước:
+
+
+1. Để trống một trong các trường: Tên, Địa chỉ, ĐT, Hotline, URL ảnh.
+
+
+2. Bấm Lưu (action=create)."	Hệ thống chặn submit / Báo lỗi yêu cầu điền đầy đủ các trường bắt buộc. Không ghi vào CSDL.	[ADM_SHOP_VIEW-01]	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Validation
+[ADM_SHOP_CREATE-02]	Kiểm tra thêm mới cửa hàng thành công khi bỏ trống trường tùy chọn (Email, Facebook, Instagram)	"Tiền điều kiện: Đang ở trang tạo mới.
+
+
+
+Các bước:
+
+
+1. Điền đủ các trường bắt buộc.
+
+
+2. Bỏ trống Email, Facebook, Instagram.
+
+
+3. Bấm Lưu (action=create)."	Thêm mới thành công, redirect về danh sách kèm tham số status=created. Giá trị các trường tùy chọn trong DB được lưu là NULL.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Nullable Fields
+[ADM_SHOP_CREATE-03]	Kiểm tra tự động chuyển các shop khác về "Tạm ẩn" khi thêm shop mới ở trạng thái "Đang hoạt động"	"Tiền điều kiện: Shop A đang có trạng thái ""Đang hoạt động"".
+
+
+
+Các bước:
+
+
+1. Tạo Shop B mới với tích chọn ""Đang hoạt động"".
+
+
+2. Kiểm tra lại DB/Giao diện."	Shop B có trạng thái "Đang hoạt động". Shop A và các shop còn lại tự động chuyển thành "Tạm ẩn" trong cùng Transaction.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Single Active
+[ADM_SHOP_EDIT-01]	Kiểm tra cập nhật cửa hàng thất bại do ID sai định dạng (Ký tự / Số âm)	"Tiền điều kiện: Dùng Postman gửi API.
+
+
+
+Các bước:
+
+
+1. Gửi request POST /admin/shop-info với action=update, id=abc (hoặc id=-1)."	Server trả về mã lỗi HTTP 400 Bad Request.	None	Passed	10/24/2026	API Validation
+[ADM_SHOP_EDIT-02]	Kiểm tra cập nhật cửa hàng thất bại do ID không tồn tại trong CSDL	"Tiền điều kiện: ID 99999 không có trong DB.
+
+
+
+Các bước:
+
+
+1. Gửi request POST /admin/shop-info với action=update, id=99999"	Server trả về mã lỗi HTTP 404 Not Found.	None	Passed	10/24/2026	Not Found
+[ADM_SHOP_EDIT-03]	Kiểm tra cập nhật thông tin cửa hàng thành công	"Tiền điều kiện: Shop ID 1 tồn tại trong CSDL.
+
+
+
+Các bước:
+
+
+1. Mở form sửa Shop ID 1.
+
+
+2. Thay đổi Tên, Số điện thoại.
+
+
+3. Bấm Lưu (action=update)."	Cập nhật dữ liệu vào DB thành công. Redirection về trang danh sách kèm tham số status=updated.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Main Flow
+[ADM_SHOP_EDIT-04]	Kiểm tra tự động đặt các shop khác về "Tạm ẩn" khi chuyển 1 shop sang "Đang hoạt động"	"Tiền điều kiện: Shop 1 (Đang hoạt động), Shop 2 (Tạm ẩn).
+
+
+
+Các bước:
+
+
+1. Sửa Shop 2, đổi trạng thái sang ""Đang hoạt động"".
+
+
+2. Bấm Lưu."	Shop 2 chuyển thành "Đang hoạt động". Shop 1 tự động chuyển sang "Tạm ẩn".	[ADM_SHOP_EDIT-03]	Passed	10/24/2026	Status Switch
+[ADM_SHOP_DEL-01]	Kiểm tra xóa cửa hàng thất bại do ID sai định dạng	"Tiền điều kiện: Dùng Postman gửi API.
+
+
+
+Các bước:
+
+
+1. Gửi request POST /admin/shop-info với action=delete, id=xyz."	Server trả về mã lỗi HTTP 400 Bad Request.	None	Passed	10/24/2026	API Validation
+[ADM_SHOP_DEL-02]	Kiểm tra xóa cửa hàng với ID không tồn tại trong CSDL (Kiểm tra lỗ hổng Code)	"Tiền điều kiện: ID 88888 không có trong CSDL.
+
+
+
+Các bước:
+
+
+1. Gửi request POST /admin/shop-info với action=delete, id=88888."	Server vẫn redirect về trang danh sách kèm status=deleted (Do code chưa check số dòng bị xóa)	None	Passed	10/24/2026	Defect/Gap Check
+[ADM_SHOP_DEL-03]	Kiểm tra xóa cửa hàng thành công với ID hợp lệ	"Tiền điều kiện: Shop ID 3 tồn tại trong CSDL.
+
+
+
+Các bước:
+
+
+1. Thực hiện thao tác Xóa Shop ID 3 (action=delete)."	Bản ghi Shop ID 3 bị xóa khỏi DB. Chuyển hướng về trang danh sách kèm status=deleted.	[ADM_SHOP_VIEW-01]	Passed	10/24/2026	Main Flow
+[ADM_SHOP_SEC-01]	Kiểm tra lưu trữ liên kết MXH (Facebook, Instagram) đúng định dạng	"Tiền điều kiện: Đang ở form Thêm/Sửa Shop.
+
+
+
+Các bước:
+
+
+1. Nhập link Facebook: [https://facebook.com/myshop](https://facebook.com/myshop).
+
+
+2. Bấm Lưu."	Dữ liệu lưu chính xác vào DB. Trên trang danh sách/chi tiết, click vào link mở đúng đường dẫn ngoài.	[ADM_SHOP_VIEW-01]	Failed	10/23/2026	Data Format
+[ADM_SHOP_SEC-02]	Kiểm tra bảo mật chống XSS trên các trường văn bản (Tên, Địa chỉ)	"Tiền điều kiện: Đang ở form Thêm/Sửa Shop.
+
+
+
+Các bước:
+
+
+1. Nhập Tên shop: <script>alert('XSS')</script>.
+
+
+2. Bấm Lưu và xem hiển thị ở danh sách."	Tên cửa hàng được mã hóa HTML (escape string) khi hiển thị trên UI, không thực thi đoạn script mã độc.	[ADM_SHOP_VIEW-01]	Passed	10/23/2026	Security Check
+[ADM_SHOP_UX-01]	Kiểm tra không mất dữ liệu đã nhập trên form khi gặp lỗi Validation	"Tiền điều kiện: Đang ở form Thêm mới.
+
+
+
+Các bước:
+
+
+1. Nhập Tên, Địa chỉ nhưng bỏ trống Hotline.
+
+
+2. Bấm Lưu."	Hệ thống báo lỗi thiếu Hotline, giữ nguyên các giá trị Tên và Địa chỉ đã nhập trước đó trên form (không bị clear trắng form).	[ADM_SHOP_CREATE-01]	Passed	10/23/2026	Usability
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[USER_MGT_List-1]	Kiểm tra giao diện màn hình Danh sách User	"Tiền điều kiện: Người dùng đăng nhập quyền Admin (role = 1)
+
+Các bước:
+1. Truy cập trang Quản lý User của Admin
+2. Quan sát giao diện danh sách"	"1. Chuyển hướng thành công đến trang Quản lý User.
+2. Hiển thị bảng gồm các cột: Ảnh Avatar, Họ tên, Username, Email, Quyền (Role), Trạng thái, Thao tác."	Đăng nhập Admin	Passed	10/21/2026	UI check
+[USER_MGT_List-2]	Kiểm tra tìm kiếm và lọc danh sách User theo Username/Email	"Tiền điều kiện: Đã có danh sách User trong CSDL
+
+Các bước:
+1. Nhập từ khóa tìm kiếm (Username hoặc Email) vào ô tìm kiếm
+2. Bấm Enter hoặc icon Tìm kiếm"	"1. Ô tìm kiếm nhận dữ liệu từ khóa.
+2. Bảng hiển thị danh sách các User có thông tin khớp với từ khóa."	[USER_MGT_List-1]	Passed	10/22/2026	Search Function
+[USER_MGT_Add-1]	Kiểm tra giao diện và giá trị mặc định pop-up Thêm user	"Tiền điều kiện: Đang ở trang Danh sách User
+
+Các bước:
+1. Click nút [Thêm user mới]
+2. Quan sát giao diện pop-up"	"1. Pop-up Thêm user hiển thị thành công.
+2. Các trường Họ tên, Username, Email, Mật khẩu, Xác nhận mật khẩu rỗng; Khối Upload avatar rỗng."	[USER_MGT_List-1]	Passed	10/23/2026	UI check
+[USER_MGT_Add-2]	Kiểm tra validation client - Bỏ trống các trường bắt buộc	"Tiền điều kiện: Đang mở pop-up Thêm user
+
+Các bước:
+1. Để trống tất cả các trường nhập liệu
+2. Click nút [Lưu/Thêm]"	Hệ thống không gửi request, hiển thị thông báo lỗi tại từng trường bắt buộc (Họ tên, Username, Email, Mật khẩu, Xác nhận Mật khẩu).	[USER_MGT_Add-1]	Passed	10/23/2026	Client Validation
+[USER_MGT_Add-3]	Kiểm tra ràng buộc định dạng Username (Quá 30 ký tự, thiếu chữ cái, ký tự đặc biệt)	"Tiền điều kiện: Đang mở pop-up Thêm user
+
+Các bước:
+1. Nhập Username > 30 ký tự (VD: user123456789012345678901234567890) hoặc chỉ có số (VD: 123456) hoặc chứa ký tự đặc biệt (VD: user_name!)
+2. Click [Lưu]"	Hệ thống hiển thị lỗi tại trường Username: Username tối đa 30 ký tự, chỉ gồm chữ/số và phải chứa ít nhất một chữ cái.	[USER_MGT_Add-1]	Passed	10/23/2026	Boundary & Format
+[USER_MGT_Add-4]	Kiểm tra ràng buộc độ mạnh của Mật khẩu (8-16 ký tự, chữ hoa, số, ký tự đặc biệt)	"Tiền điều kiện: Đang mở pop-up Thêm user
+
+Các bước:
+1. Lần lượt nhập mật khẩu không đủ độ mạnh (VD: <8 ký tự, không chữ hoa, không số, không ký tự đặc biệt)
+2. Click [Lưu]"	Báo lỗi tại trường Mật khẩu: Mật khẩu phải từ 8–16 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.	[USER_MGT_Add-1]	Passed	10/23/2026	Password Rule
+[USER_MGT_Add-5]	Kiểm tra trường Xác nhận mật khẩu không khớp	"Tiền điều kiện: Đang mở pop-up Thêm user
+
+Các bước:
+1. Nhập Mật khẩu: Admin@123
+2. Nhập Xác nhận mật khẩu: Admin@1234
+3. Click [Lưu]"	Hệ thống báo lỗi tại trường Xác nhận mật khẩu: Mật khẩu xác nhận không trùng khớp.	[USER_MGT_Add-1]	Passed	10/23/2026	Client Validation
+[USER_MGT_Add-6]	Kiểm tra kiểm tra trùng Username/Email qua endpoint check client	"Tiền điều kiện: Đã có user testadmin / admin@gmail.com trong CSDL
+
+Các bước:
+1. Nhập Username testadmin hoặc Email admin@gmail.com
+2. Rời khỏi ô nhập liệu (blur event / trigger check endpoint)"	Endpoint check kiểm tra thành công, hiển thị cảnh báo ngay trên form: Username hoặc Email đã tồn tại trong hệ thống.	[USER_MGT_Add-1]	Passed	10/23/2026	Pre-check API
+[USER_MGT_Add-7]	Kiểm tra thêm thành công user mới không có Avatar (Mặc định Active)	"Tiền điều kiện: Đang mở pop-up Thêm user
+
+Các bước:
+1. Nhập đầy đủ thông tin hợp lệ
+2. Không chọn file Avatar
+3. Click [Lưu]"	"1. Hệ thống POST JSON tới /add-user thành công.
+2. Server lưu user mới với trạng thái mặc định Active và avatar mặc định/null.
+3. Đóng pop-up, hiển thị thông báo thành công và làm mới danh sách."	[USER_MGT_Add-1]	Passed	10/23/2026	Main Flow
+[USER_MGT_Add-8]	Kiểm tra Bảo mật Endpoint /add-user (Không gửi Token/Session Admin)	"Tiền điều kiện: Không đăng nhập Admin (Không có session/token Admin)
+
+Các bước:
+1. Dùng Postman gửi request POST /add-user kèm body dữ liệu user mới"	Server trả về mã lỗi 401 Unauthorized hoặc 403 Forbidden. Không thể thêm user mới khi không có quyền Admin.	None	Failed	10/23/2026	Security Test
+[USER_MGT_Edit-1]	Kiểm tra tải dữ liệu popup Sửa user thành công (GET API)	"Tiền điều kiện: Đang ở trang Danh sách User, đã có user ID = 105
+
+Các bước:
+1. Click nút [Sửa] tại dòng User ID 105
+2. Quan sát request GET /get-user-edit?userId=105 và popup hiển thị"	"1. Hệ thống gọi API GET /get-user-edit?userId=105 thành công.
+2. Popup Sửa user mở ra và điền đúng, đầy đủ thông tin hiện tại của user (Họ tên, Username, Email, Role, Avatar)."	[USER_MGT_List-1]	Passed	10/23/2026	UI & API Check
+[USER_MGT_Edit-2]	Kiểm tra trạng thái Chỉ đọc (Read-only) của Username và Email	"Tiền điều kiện: Đang mở popup Sửa user ID 105
+
+Các bước:
+1. Thử nhấp chuột và chỉnh sửa tại trường Username
+2. Thử nhấp chuột và chỉnh sửa tại trường Email"	Các trường Username và Email ở trạng thái disabled hoặc read-only, người dùng không thể nhập hay thay đổi nội dung.	[USER_MGT_Edit-1]	Passed	10/23/2026	UI Field Rule
+[USER_MGT_Edit-3]	Kiểm tra validation client - Bỏ trống trường Họ tên khi Sửa	"Tiền điều kiện: Đang mở popup Sửa user
+
+Các bước:
+1. Xóa rỗng ô Họ tên
+2. Click nút [Lưu thay đổi]"	Client chặn gửi request, hiển thị thông báo lỗi: Họ tên không được để trống.	[USER_MGT_Edit-1]	Failed	10/23/2026	Client Validation
+[USER_MGT_Edit-4]	Kiểm tra sửa Họ tên và Role thành công (Không thay đổi Avatar)	"Tiền điều kiện: Đang mở popup Sửa user ID 105
+
+Các bước:
+1. Sửa Họ tên thành Nguyễn Văn A (Updated)
+2. Thay đổi Role trong dropdown
+3. Không chọn ảnh Avatar mới (hasImage = false)
+4. Click [Lưu]"	"1. Client gửi POST JSON tới /edit-user với hasImage: false.
+2. Server cập nhật full_name và role_id trong DB, giữ nguyên avatar cũ.
+3. Hiển thị thông báo thành công và làm mới danh sách."	[USER_MGT_Edit-1]	Passed	10/23/2026	Main Flow
+[USER_MGT_Edit-6]	Kiểm tra toàn vẹn dữ liệu - Username, Email, Password không bị ghi đè trong DB	"Tiền điều kiện: Thực hiện sửa thành công ở test case [USER_MGT_Edit-4]
+
+Các bước:
+1. Truy vấn trực tiếp bản ghi user trong bảng users ở CSDL"	Giá trị của các cột username, email, password giữ nguyên như trước khi sửa, không bị cập nhật thành NULL/rỗng.	[USER_MGT_Edit-4]	Failed	10/23/2026	DB Integrity
+[USER_MGT_Edit-7]	Kiểm tra Bảo mật - Chống sửa trái phép Username/Email/Password qua Body Payload	"Tiền điều kiện: Đăng nhập Admin. Dùng Postman gọi trực tiếp API POST /edit-user
+
+Các bước:
+1. Đưa các trường username, email, password vào body request JSON với giá trị mới
+2. Gửi request"	Server bỏ qua (ignore) các field không nằm trong danh sách cho phép sửa (username, email, password), DB giữ nguyên giá trị cũ.	None	Passed	10/23/2026	Security Test
+[USER_MGT_Lock-1]	Kiểm tra hiển thị nút Khóa / Mở khóa theo trạng thái tài khoản trên giao diện	"Tiền điều kiện: Đã đăng nhập Admin, danh sách có tài khoản Customer active và locked
+
+Các bước:
+1. Truy cập trang Danh sách User
+2. Quan sát nút thao tác tại cột Action của các tài khoản Customer"	"1. Tài khoản có trạng thái Active hiển thị nút [Khóa].
+2. Tài khoản có trạng thái Locked hiển thị nút [Mở khóa]."	[USER_MGT_List-1]	Failed	10/23/2026	UI Check
+[USER_MGT_Lock-2]	Kiểm tra luồng Khóa tài khoản Customer thành công (Action = lock)	"Tiền điều kiện: Đang ở danh sách User, có Customer cust01 đang Active
+
+Các bước:
+1. Click [Khóa] tại dòng Customer cust01
+2. Bấm [Đồng ý] trên dialog xác nhận"	"1. Client gửi GET /lock-unlock-user?action=lock&id={cust01_id}.
+2. Server chuyển trạng thái trong DB thành locked.
+3. Refresh về danh sách, hiển thị trạng thái Locked và nút đổi thành [Mở khóa]."	[USER_MGT_Lock-1]	Failed	10/23/2026	Main Flow
+[USER_MGT_Lock-3]	Kiểm tra luồng Mở khóa tài khoản Customer thành công (Action = unlock)	"Tiền điều kiện: Đang ở danh sách User, có Customer cust01 đang Locked
+
+Các bước:
+1. Click [Mở khóa] tại dòng Customer cust01
+2. Bấm [Đồng ý] trên dialog xác nhận"	"1. Client gửi GET /lock-unlock-user?action=unlock&id={cust01_id}.
+2. Server chuyển trạng thái trong DB thành active.
+3. Refresh về danh sách, hiển thị trạng thái Active và nút đổi thành [Khóa]."	[USER_MGT_Lock-2]	Passed	10/23/2026	Main Flow
+[USER_MGT_Lock-4]	Kiểm tra chặn Đăng nhập đối với tài khoản Customer đang bị Khóa (Locked)	"Tiền điều kiện: Tài khoản cust01 vừa bị khóa ở test case [USER_MGT_Lock-2]
+
+Các bước:
+1. Đăng xuất Admin
+2. Thực hiện đăng nhập bằng tài khoản cust01 với đúng username/password"	Đăng nhập thất bại, hệ thống báo lỗi rõ ràng: Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để biết thêm chi tiết.	[USER_MGT_Lock-2]	Failed	10/23/2026	Authentication Test
+[USER_MGT_Lock-5]	Kiểm tra Ràng buộc Nghiệp vụ - Không cho phép Admin tự Khóa tài khoản chính mình	"Tiền điều kiện: Đăng nhập Admin (admin_id = 1). Gọi trực tiếp GET /lock-unlock-user?action=lock&id=1
+
+Các bước:
+1. Dùng Postman/Trình duyệt gọi API với ID của chính Admin đang đăng nhập"	Server kiểm tra id_dích == current_user_id và từ chối xử lý, trả về lỗi Không thể tự khóa tài khoản của chính mình.	None	Failed	10/23/2026	Business Constraint
+[USER_MGT_Lock-6]	Kiểm tra Ràng buộc Nghiệp vụ - Chặn Khóa/Mở khóa tài khoản không phải role Customer (role != 2)	"Tiền điều kiện: Có tài khoản Admin khác (role = 1, id = 2). Gọi GET /lock-unlock-user?action=lock&id=2
+
+Các bước:
+1. Gửi request GET /lock-unlock-user?action=lock&id=2"	Server kiểm tra điều kiện role == 2 (Customer). Nếu không phải Customer, server từ chối cập nhật trạng thái.	None	Passed	10/23/2026	Business Constraint
+[USER_MGT_Delete-1]	Kiểm tra nút [Xóa] chỉ hiển thị cho tài khoản Role Customer trên giao diện	"Tiền điều kiện: Đang ở trang Danh sách User, danh sách chứa cả tài khoản Admin và Customer
+
+Các bước:
+1. Quan sát cột Action/Thao tác trên bảng danh sách User"	"1. Nút [Xóa] chỉ xuất hiện trên các dòng tài khoản có role = customer (role == 2).
+2. Nút [Xóa] KHÔNG hiển thị trên dòng của tài khoản Admin."	[USER_MGT_List-1]	Passed	10/23/2026	UI Constraint
+[USER_MGT_Delete-2]	Kiểm tra luồng Xóa Customer thành công không có Avatar	"Tiền điều kiện: Customer cust02 không có Avatar
+
+Các bước:
+1. Bấm [Xóa] tài khoản cust02 và chọn [Đồng ý]"	"1. Bỏ qua bước xóa file trên Firebase Storage.
+2. Server xóa tài khoản trên Firebase Auth và xóa bản ghi trong DB thành công.
+3. Reload lại danh sách."	[USER_MGT_Delete-1]	Passed	10/23/2026	Main Flow
+[USER_MGT_Delete-3]	Kiểm tra Ràng buộc Nghiệp vụ Server - Chặn xóa tài khoản Admin (role == 1) qua API	"Tiền điều kiện: Có tài khoản Admin admin_2. Bỏ qua UI, gửi POST /delete-user với userId của admin_2
+
+Các bước:
+1. Gọi API POST /delete-user truyền userId = admin_2_id"	Server kiểm tra vai trò tài khoản đích, phát hiện không phải Customer (role != 2) nên từ chối xóa và trả về lỗi.	None	Skip	10/23/2026	Business Constraint
+[USER_MGT_Delete-4]	Kiểm tra Bảo mật Endpoint /delete-user - Gọi API bằng tài khoản Customer	"Tiền điều kiện: Đăng nhập tài khoản Role Customer
+
+Các bước:
+1. Dùng Token/Cookie của Customer gửi POST /delete-user với userId của Customer khác"	Server kiểm tra vai trò người gọi request và trả về lỗi 403 Forbidden, ngăn chặn Customer lợi dụng API để xóa tài khoản.	None	Skip	10/23/2026	Security Test
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+[AUTH_Login-1]	Kiểm tra hiển thị form Đăng nhập (GET /login) khi chưa đăng nhập	"Tiền điều kiện: Người dùng chưa đăng nhập
+
+Các bước:
+1. Truy cập đường dẫn /login
+2. Quan sát giao diện"	Hiển thị form Đăng nhập với các trường Username/Email và Mật khẩu rỗng.	None	Passed	10/24/2026	UI check
+[AUTH_Login-2]	Kiểm tra tự động chuyển về trang chủ khi đã đăng nhập (Active)	"Tiền điều kiện: Người dùng đã đăng nhập thành công và tài khoản còn Active
+
+Các bước:
+1. Truy cập đường dẫn /login"	Hệ thống tự động chuyển hướng (Redirect) về trang chủ (/).	[AUTH_Login-5]	Passed	10/24/2026	Session Check
+[AUTH_Login-3]	Kiểm tra xóa session khi người dùng đã đăng nhập nhưng tài khoản bị khóa/xóa trong CSDL	"Tiền điều kiện: Đã có Session đăng nhập nhưng tài khoản vừa bị Admin khóa/xóa
+
+Các bước:
+1. Truy cập đường dẫn /login"	Session user bị xóa hoàn toàn. Hệ thống hiển thị form Đăng nhập.	None	Passed	10/24/2026	Session Clean
+[AUTH_Login-4]	Kiểm tra đăng nhập thất bại do sai Username/Email hoặc Mật khẩu	"Tiền điều kiện: Đang ở trang /login
+
+Các bước:
+1. Nhập sai Username/Email hoặc Mật khẩu
+2. Click [Đăng nhập]"	Đăng nhập thất bại. Báo lỗi: 'Tài khoản hoặc mật khẩu không đúng'.	[AUTH_Login-1]	Passed	10/24/2026	Negative Test
+[AUTH_Login-5]	Kiểm tra đăng nhập thất bại do tài khoản bị khóa (Status = locked)	"Tiền điều kiện: Tài khoản đã bị khóa trong DB
+
+Các bước:
+1. Nhập đúng thông tin tài khoản bị khóa
+2. Click [Đăng nhập]"	Đăng nhập thất bại. Hệ thống hiển thị thông báo: 'Tài khoản đã bị khóa'.	[AUTH_Login-1]	Passed	10/24/2026	Account Status
+[AUTH_Login-6]	Kiểm tra đăng nhập thành công tài khoản Customer (role = 2)	"Tiền điều kiện: Tài khoản Customer đang Active
+
+Các bước:
+1. Nhập hợp lệ Username/Email và Mật khẩu
+2. Click [Đăng nhập]"	"1. Lưu user vào Session, gộp giỏ hàng.
+2. Chuyển hướng về trang chủ Customer (/)."	[AUTH_Login-1]	Passed	10/24/2026	Main Flow
+[AUTH_Login-7]	Kiểm tra đăng nhập thành công tài khoản Admin (role = 1)	"Tiền điều kiện: Tài khoản Admin đang Active
+
+Các bước:
+1. Nhập hợp lệ thông tin Admin
+2. Click [Đăng nhập]"	"1. Lưu user vào Session.
+2. Chuyển hướng về trang quản trị Admin (/admin-order)."	[AUTH_Login-1]	Passed	10/24/2026	Role Redirect
+[AUTH_Login-8]	Kiểm tra chuyển hướng về trang Wishlist khi có tham số continue	"Tiền điều kiện: Chưa đăng nhập, truy cập /login?continue=wishlist
+
+Các bước:
+1. Đăng nhập tài khoản Customer hợp lệ"	Đăng nhập thành công, chuyển hướng về trang Wishlist (/wishlist).	[AUTH_Login-6]	Passed	10/24/2026	Redirect Flow
+[AUTH_Register-1]	Kiểm tra validation client phía JavaScript trước khi đăng ký	"Tiền điều kiện: Đang ở trang /register
+
+Các bước:
+1. Nhập sai định dạng Email hoặc Mật khẩu yếu
+2. Click [Đăng ký]"	File register.js chặn submit và hiển thị thông báo lỗi trên UI.	None	Passed	10/24/2026	Client Validation
+[AUTH_Register-2]	Kiểm tra kiểm tra trùng lặp Username/Email trước khi tạo tài khoản Firebase	"Tiền điều kiện: Username/Email đã tồn tại trong DB
+
+Các bước:
+1. Nhập Username/Email đã tồn tại và trigger event check"	Cảnh báo Username/Email đã tồn tại, ngăn chặn tạo Firebase account.	None	Passed	10/24/2026	Pre-check API
+[AUTH_Register-3]	Kiểm tra tạo tài khoản Firebase và gửi Email xác thực	"Tiền điều kiện: Nhập thông tin đăng ký mới hợp lệ
+
+Các bước:
+1. Click [Đăng ký]
+2. Kiểm tra tiến trình"	"1. Firebase tạo tài khoản thành công.
+2. Email xác thực được gửi đến địa chỉ email đăng ký."	None	Skip	10/24/2026	Firebase Service
+[AUTH_Register-4]	Kiểm tra luồng đăng ký thành công (Xác nhận email + POST /register)	"Tiền điều kiện: Đã bấm link xác thực email trong Firebase
+
+Các bước:
+1. Trình duyệt gọi POST /register để lưu CSDL"	"1. Lưu tài khoản vào DB (status='active', role=2).
+2. Chuyển hướng sang trang Đăng nhập (/login)."	[AUTH_Register-3]	Skip	10/24/2026	Main Flow
+[AUTH_Register-5]	Kiểm tra gọi trực tiếp API POST /register với dữ liệu không hợp lệ	"Tiền điều kiện: Dùng Postman gửi POST /register
+
+Các bước:
+1. Gửi payload rỗng hoặc thiếu các trường bắt buộc"	Controller trả về sớm (Early Return), hệ thống xử lý an toàn không bị lỗi 500.	None	Passed	10/24/2026	API Security
+[AUTH_Forgot-1]	Kiểm tra gửi yêu cầu quên mật khẩu với Email không tồn tại	"Tiền điều kiện: Đang ở trang Quên mật khẩu
+
+Các bước:
+1. Nhập Email chưa đăng ký
+2. Bấm [Gửi] (POST /forgot-email)"	Hệ thống báo lỗi: 'Email không tồn tại trong hệ thống'.	None	Passed	10/24/2026	Negative Test
+[AUTH_Forgot-2]	Kiểm tra gửi yêu cầu quên mật khẩu thành công với Email hợp lệ	"Tiền điều kiện: Email đã tồn tại trong DB
+
+Các bước:
+1. Nhập Email hợp lệ
+2. Bấm [Gửi] (POST /forgot-email)"	"1. Tạo Token (hạn 15 phút), thay Token cũ (nếu có).
+2. Gửi email chứa link /view-reset-password?token=..."	None	Skip	10/24/2026	Main Flow
+[AUTH_Reset-1]	Kiểm tra mở link reset mật khẩu với Token không tồn tại hoặc hết hạn (> 15 phút)	"Tiền điều kiện: Token sai hoặc đã tạo quá 15 phút
+
+Các bước:
+1. Truy cập GET /view-reset-password?token=..."	Báo lỗi Token không hợp lệ hoặc đã hết hạn, không mở form đặt lại mật khẩu.	[AUTH_Forgot-2]	Passed	10/24/2026	Token Expiry
+[AUTH_Reset-2]	Kiểm tra mở link reset mật khẩu với Token hợp lệ	"Tiền điều kiện: Token hợp lệ và còn trong thời hạn 15 phút
+
+Các bước:
+1. Truy cập GET /view-reset-password?token=valid_token"	Xác thực token thành công, hiển thị form Đặt lại mật khẩu.	[AUTH_Forgot-2]	Passed	10/24/2026	Main Flow
+[AUTH_Reset-3]	Kiểm tra đặt lại mật khẩu thành công qua giao diện	"Tiền điều kiện: Đang ở trang reset password với token hợp lệ.
+
+
+
+Các bước:
+
+
+1. Nhập mật khẩu mới và xác nhận mật khẩu khớp nhau.
+
+
+2. Bấm Submit (JS chặn form JSP, gọi POST /reset-password)."	Xóa token, cập nhật mật khẩu mới trong DB transaction và hiển thị thông báo thành công.	[AUTH_Reset-1]	Passed	10/23/2026	Reset Flow
+[AUTH_Reset-4]	Kiểm tra chặn sử dụng lại Token sau khi đã đổi mật khẩu thành công	"Tiền điều kiện: Token abc123valid vừa được đổi mật khẩu ở [AUTH_Reset-3].
+
+
+
+Các bước:
+
+
+1. Dùng lại URL /view-reset-password?token=abc123valid."	Server báo token không tồn tại (do đã bị xóa khỏi DB ở lượt reset trước).	[AUTH_Reset-3]	Passed	10/23/2026	Anti-Replay
+[AUTH_Reset-5]	Kiểm tra gọi trực tiếp API POST /reset-password với mật khẩu yếu (Bypass JS)	"Tiền điều kiện: Token hợp lệ còn thời hạn.
+
+
+
+Các bước:
+
+
+1. Dùng Postman gửi POST /reset-password kèm token và pass ""1""."	API cập nhật mật khẩu mới thành công (do server không validate độ mạnh mật khẩu).	[AUTH_Forgot-2]	Skip	10/23/2026	Server Validation
+[AUTH_Logout-1]	Kiểm tra đăng xuất khi người dùng đang có Session đăng nhập	"Tiền điều kiện: Người dùng đang trong trạng thái Đăng nhập.
+
+
+
+Các bước:
+
+
+1. Gửi request GET /logout."	Hủy toàn bộ Session hiện tại và chuyển hướng về trang chủ (/).	[AUTH_Login-6]	Passed	10/23/2026	Functional Check
+[AUTH_Logout-2]	Kiểm tra gửi request GET /logout khi chưa đăng nhập	"Tiền điều kiện: Người dùng vãng lai, chưa có Session.
+
+
+
+Các bước:
+
+
+1. Truy cập đường dẫn /logout."	Không phát sinh lỗi hệ thống (500), tự động chuyển hướng an toàn về trang chủ (/).	None	Passed	10/23/2026	Boundary Check
+[AUTH_Logout-3]	Kiểm tra chặn truy cập các trang nội bộ bằng nút Back sau khi Logout	"iền điều kiện: Vừa đăng xuất thành công từ [AUTH_Logout-1].
+
+
+
+Các bước:
+
+
+1. Nhấn nút Back trên trình duyệt để quay lại trang quản lý trước đó."	Trình duyệt không tải lại dữ liệu cũ hoặc khi thao tác bị yêu cầu Đăng nhập lại.	[AUTH_Logout-1]	Passed	10/23/2026	Cache & Session
+===============Các test case Group06_23130335_DoQuangToan==============
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+ADMIN_ORDER_View_001	Hiển thị trang quản lý đơn hàng	Tiền điều kiện: Có tài khoản Admin hợp lệ. 1. Đăng nhập Admin. 2. Chọn Quản lí đơn hàng. 3. Quan sát giao diện	1. Trang quản lý đơn hàng hiển thị. 2. Hiển thị ô tìm kiếm, bộ lọc trạng thái, bộ lọc xác thực và nút Tìm kiếm.	Tài khoản Admin hợp lệ.	Passed	23/10/2026	
+ADMIN_ORDER_Empty_001	Hiển thị khi không có đơn hàng	Tiền điều kiện: Danh sách đơn hàng không có dữ liệu. 1. Mở trang quản lý đơn hàng. 2. Quan sát danh sách.	Hiển thị thông báo “Không có đơn hàng nào”.	Không có đơn hàng phù hợp với điều kiện hiện tại.	Failed	23/10/2026	Không Pass bởi vì nó có data đơn hàng
+ADMIN_ORDER_SearchCode_001	Tìm theo mã đơn hàng tồn tại	Tiền điều kiện: Có đơn hàng đã tồn tại. 1. Mở trang quản lý đơn hàng. 2. Nhập mã đơn hàng hợp lệ. 3. Nhấn Tìm kiếm.	Hiển thị đơn hàng có mã tương ứng với từ khóa tìm kiếm.	Có mã đơn hàng hợp lệ.	Passed	23/10/2026	
+ADMIN_ORDER_SearchCode_002	Tìm theo mã đơn hàng không tồn tại	1. Mở trang quản lý đơn hàng. 2. Nhập mã không tồn tại. 3. Nhấn Tìm kiếm.	Không hiển thị đơn hàng phù hợp; hiển thị trạng thái danh sách rỗng nếu không có kết quả.	Không phụ thuộc test case khác; cần biết mã không tồn tại.	Passed	23/10/2026	
+ADMIN_ORDER_SearchName_001	Tìm theo tên người nhận	Tiền điều kiện: Có đơn hàng với tên người nhận đã biết. 1. Nhập tên người nhận vào ô tìm kiếm. 2. Nhấn Tìm kiếm.	Hiển thị các đơn hàng phù hợp với tên người nhận theo quy tắc tìm kiếm của hệ thống	Có tên người nhận hợp lệ.	Passed	23/10/2026	
+ADMIN_ORDER_SearchName_002	Tìm tên người nhận không tồn tại	1. Nhập tên không có trong hệ thống. 2. Nhấn Tìm kiếm.	Không hiển thị đơn hàng phù hợp.	Không phụ thuộc test case khác.	Passed	23/10/2026	
+ADMIN_ORDER_SearchEmpty_001	Tìm kiếm khi từ khóa trống	1. Mở trang quản lý đơn hàng. 2. Để trống ô tìm kiếm. 3. Nhấn Tìm kiếm.	Hệ thống xử lý theo quy tắc mặc định; không phát sinh lỗi giao diện.	Đang ở trang quản lý đơn hàng.	Passed	23/10/2026	
+ADMIN_ORDER_SearchSpace_001	Tìm kiếm bằng khoảng trắng	1. Nhập một hoặc nhiều dấu cách vào ô tìm kiếm. 2. Nhấn Tìm kiếm.	Hệ thống xử lý hợp lệ, không bị treo hoặc phát sinh lỗi. Kết quả tuân theo quy tắc tìm kiếm của website.	Đang ở trang quản lý đơn hàng.	Passed	23/10/2026	
+ADMIN_ORDER_FilterStatus_001	Lọc đơn hàng theo trạng thái	Tiền điều kiện: Có đơn hàng thuộc trạng thái cần lọc. 1. Chọn một trạng thái cụ thể. 2. Nhấn Tìm kiếm. 3. Quan sát danh sách.	Chỉ hiển thị các đơn hàng phù hợp với trạng thái đã chọn và điều kiện tìm kiếm khác.	Có đơn hàng thuộc trạng thái được chọn.	Passed	23/10/2026	
+ADMIN_ORDER_FilterStatus_002	Xem tất cả trạng thái	1. Mở bộ lọc trạng thái. 2. Chọn “Tất cả trạng thái”. 3. Nhấn Tìm kiếm.	Hiển thị tất cả đơn hàng phù hợp với các điều kiện lọc còn lại.	Có dữ liệu đơn hàng.	Passed	23/10/2026	
+ADMIN_ORDER_FilterVerified_001	Lọc đơn xác thực	Tiền điều kiện: Có đơn hàng xác thực. 1. Chọn bộ lọc đơn xác thực. 2. Nhấn Tìm kiếm.	Hiển thị các đơn hàng đáp ứng điều kiện xác thực.	Có đơn hàng xác thực.	Passed	23/10/2026	
+ADMIN_ORDER_FilterUnverified_001	Lọc đơn không xác thực	Tiền điều kiện: Có đơn hàng không xác thực. 1. Chọn bộ lọc đơn không xác thực. 2. Nhấn Tìm kiếm.	Hiển thị các đơn hàng không xác thực theo quy tắc hệ thống.	Có đơn hàng không xác thực.	Passed	23/10/2026	
+ADMIN_ORDER_FilterCombined_001	Kết hợp tìm kiếm và lọc trạng thái	Tiền điều kiện: Có đơn hàng phù hợp. 1. Nhập mã đơn hoặc tên người nhận. 2. Chọn trạng thái. 3. Nhấn Tìm kiếm.	Kết quả thỏa mãn cả từ khóa tìm kiếm và trạng thái đã chọn.	Từ khóa và trạng thái đều có dữ liệu phù hợp	Passed	23/10/2026	
+ADMIN_ORDER_FilterCombined_002	Kết hợp hai bộ lọc	Tiền điều kiện: Có dữ liệu phù hợp cả hai bộ lọc. 1. Chọn trạng thái đơn hàng. 2. Chọn loại xác thực. 3. Nhấn Tìm kiếm.	Danh sách chỉ hiển thị đơn hàng đáp ứng đồng thời hai điều kiện.	Có dữ liệu thỏa mãn cả hai bộ lọc.	Passed	23/10/2026	
+ADMIN_ORDER_CreateForm_001	Mở form tạo đơn hàng	1. Mở trang Quản lí đơn hàng. 2. Nhấn “Tạo đơn hàng cho khách hàng”. 3. Quan sát form.	Form hiển thị các trường Khách hàng, Địa chỉ nhận hàng, Phương thức thanh toán, Sản phẩm/biến thể, Số lượng, Ghi chú và nút tạo đơn.	Tài khoản Admin hợp lệ.	Passed	23/10/2026	
+ADMIN_ORDER_CreateRequired_001	Tạo đơn khi chưa chọn khách hàng	1. Mở form tạo đơn hàng. 2. Không chọn khách hàng. 3. Điền các trường khác nếu có thể. 4. Nhấn “Tạo đơn và giữ tồn kho”.	Hệ thống từ chối tạo đơn khi thiếu khách hàng bắt buộc; hiển thị thông báo hoặc validation phù hợp	Form tạo đơn hàng đang mở.	Passed	23/10/2026	
+ADMIN_ORDER_CreateAddress_001	Tạo đơn khi chưa chọn địa chỉ nhận hàng	1. Mở form tạo đơn hàng. 2. Chọn khách hàng. 3. Không chọn địa chỉ nhận hàng. 4. Điền các trường bắt buộc khác. 5. Nhấn tạo đơn.	Nếu địa chỉ là trường bắt buộc, hệ thống từ chối tạo đơn và yêu cầu chọn địa chỉ.	Có khách hàng với địa chỉ nhận hàng; form đang mở.	Passed	23/10/2026	
+ADMIN_ORDER_CreatePayment_001	Tạo đơn khi chưa chọn phương thức thanh toán	1. Mở form tạo đơn hàng. 2. Chọn khách hàng và địa chỉ. 3. Không chọn phương thức thanh toán. 4. Chọn sản phẩm và số lượng hợp lệ. 5. Nhấn tạo đơn.	Nếu phương thức thanh toán là bắt buộc, hệ thống từ chối tạo đơn và yêu cầu chọn phương thức.	Có khách hàng, địa chỉ và sản phẩm hợp lệ.	Passed	23/10/2026	
+ADMIN_ORDER_CreateProduct_001	Tạo đơn khi chưa chọn sản phẩm	1. Mở form tạo đơn hàng. 2. Chọn khách hàng, địa chỉ và phương thức thanh toán. 3. Không chọn sản phẩm/biến thể. 4. Nhấn tạo đơn.	Hệ thống từ chối tạo đơn khi không có sản phẩm hợp lệ.	Có dữ liệu khách hàng, địa chỉ và phương thức thanh toán.	Passed	23/10/2026	
+ADMIN_ORDER_CreateValid_001	Tạo đơn hàng với dữ liệu hợp lệ	Tiền điều kiện: Có khách hàng, địa chỉ, phương thức thanh toán và sản phẩm còn đủ tồn kho. 1. Mở form tạo đơn hàng. 2. Chọn khách hàng. 3. Chọn địa chỉ nhận hàng. 4. Chọn phương thức thanh toán. 5. Chọn sản phẩm và nhập số lượng hợp lệ. 6. Nhập ghi chú nếu cần. 7. Nhấn “Tạo đơn và giữ tồn kho”.	Đơn hàng được tạo thành công. Đơn mới tạo ở trạng thái chờ khách hàng ký số; tồn kho được giữ theo quy tắc hệ thống.	Dữ liệu khách hàng và sản phẩm hợp lệ; tồn kho đủ.	Passed		
+ADMIN_ORDER_RemoveProduct_001	Xóa sản phẩm khỏi đơn	1. Thêm ít nhất một dòng sản phẩm. 2. Nhấn “Xóa” tại dòng muốn bỏ.	Dòng sản phẩm được xóa khỏi form; các dòng còn lại vẫn hiển thị đúng.	Form có ít nhất một dòng sản phẩm.	Passed		
+ADMIN_ORDER_AddProduct_001	Thêm sản phẩm vào đơn	1. Mở form tạo đơn. 2. Nhấn “+ Thêm sản phẩm”. 3. Quan sát các dòng sản phẩm.	Một dòng sản phẩm mới xuất hiện để chọn sản phẩm/biến thể và nhập số lượng.	Form tạo đơn hàng đang mở.	Passed		
+ADMIN_ORDER_QuantityZero_001	Nhập số lượng bằng 0	1. Mở form tạo đơn. 2. Chọn sản phẩm. 3. Nhập số lượng 0. 4. Nhấn tạo đơn.	Hệ thống từ chối số lượng không hợp lệ và không tạo đơn.	Sản phẩm được chọn; tồn kho lớn hơn 0.	Passed		
+ADMIN_ORDER_MultipleProducts_001	Thêm nhiều sản phẩm vào đơn hàng	iền điều kiện: Có ít nhất 2 sản phẩm còn hàng. 1. Mở form tạo đơn hàng. 2. Chọn khách hàng, địa chỉ nhận hàng và phương thức thanh toán. 3. Chọn sản phẩm A. 4. Nhấn “+ Thêm sản phẩm”. 5. Chọn sản phẩm B. 6. Nhập số lượng hợp lệ cho cả hai sản phẩm. 7. Nhấn “Tạo đơn và giữ tồn kho”.	1. Form hiển thị đầy đủ hai dòng sản phẩm. 2. Đơn hàng được tạo thành công với cả hai sản phẩm và số lượng tương ứng. 3. Tồn kho của từng sản phẩm được giữ theo số lượng đã đặt.	Có ít nhất 2 sản phẩm còn đủ tồn kho; thông tin khách hàng hợp lệ.	Passed	A	
+ADMIN_ORDER_NegativeQuantity_001	Không cho nhập số lượng âm 	Tiền điều kiện: Có sản phẩm còn hàng. 1. Mở form tạo đơn hàng. 2. Chọn sản phẩm. 3. Nhập số lượng -1. 4. Nhấn “Tạo đơn và giữ tồn kho”.	1. Hệ thống từ chối số lượng âm hoặc hiển thị thông báo lỗi. 2. Đơn hàng không được tạo với số lượng âm. 3. Tồn kho không bị thay đổi do yêu cầu không hợp lệ.	Sản phẩm còn hàng; các thông tin bắt buộc khác hợp lệ.	Passed		
+ADMIN_ORDER_EmptyQuantity_001	Không cho tạo đơn khi số lượng để trống	Tiền điều kiện: Có sản phẩm còn hàng. 1. Mở form tạo đơn hàng. 2. Chọn sản phẩm. 3. Xóa giá trị trong ô Số lượng. 4. Nhấn “Tạo đơn và giữ tồn kho”.	1. Hệ thống yêu cầu nhập số lượng hoặc từ chối dữ liệu trống. 2. Đơn hàng không được tạo với số lượng trống.	Sản phẩm còn hàng; các thông tin bắt buộc khác hợp lệ.	Passed		
+ADMIN_ORDER_DecimalQuantity_001	Không cho tạo đơn với số lượng thập phân	iền điều kiện: Có sản phẩm còn hàng. 1. Mở form tạo đơn hàng. 2. Chọn sản phẩm. 3. Nhập số lượng 1.5. 4. Nhấn “Tạo đơn và giữ tồn kho”.	1. Hệ thống từ chối số lượng thập phân hoặc yêu cầu nhập số nguyên. 2. Đơn hàng không được tạo với số lượng 1.5	Sản phẩm còn hàng; các thông tin bắt buộc khác hợp lệ.	Failed		
+							
+
+ID	Test Case Description	Test Case Procedure	Expected Output	Inter-test case Dependence	Result	Test date	Note
+CART_AddToCart_Success_001	Thêm sản phẩm thành công	Tiền điều kiện: Sản phẩm A còn hàng. 1. Mở trang chi tiết sản phẩm A. 2. Nhấn nút Thêm vào giỏ hàng. 3. Mở giỏ hàng.	Giỏ hàng hiển thị sản phẩm A với thông tin chính xác.	Sản phẩm A tồn tại, còn hàng; người dùng có quyền thêm vào giỏ hàng.	Passed	23/10/2026	
+CART_AddToCart_Quantity2_001	Thêm sản phẩm số lượng 2	Tiền điều kiện: Sản phẩm A còn ít nhất 2 đơn vị. 1. Mở trang chi tiết A. 2. Tăng  số lượng sản phẩm lên 2. 3. Nhấn Thêm vào giỏ hàng.	1.Ô số lượng nhận giá trị 2. Sản phẩm A được thêm với số lượng 2.	Sản phẩm A còn ít nhất 2 đơn vị.	Passed	23/10/2026	
+CART_AddToCart_QuantityZero_001	Không cho thêm số lượng 0	Tiền điều kiện: Sản phẩm A còn hàng. 1. Mở trang chi tiết A. 2. Nhập số lượng 0. 3. Nhấn Thêm vào giỏ hàng.	1.Hệ thống từ chối giá trị 0 hoặc hiển thị lỗi xác thực. 2. Sản phẩm không được thêm với số lượng 0.	Sản phẩm A còn hàng; có ô nhập số lượng.	Passed	23/10/2026	
+CART_AddToCart_OutOfStock_001	Không thêm sản phẩm hết hàng	Tiền điều kiện: Sản phẩm A có tồn kho bằng 0. 1. Mở trang chi tiết A. 2. Quan sát nút thêm giỏ hàng. 3. Thử thêm sản phẩm nếu nút vẫn khả dụng.	1. Hệ thống từ chối thêm sản phẩm hết hàng.	Không phụ thuộc test case khác; cần sản phẩm A có tồn kho bằng 0.	Passed	23/10/2026	
+CART_AddToCart_ExceedStock_001	Không thêm vượt tồn kho	iền điều kiện: Sản phẩm A còn 5 đơn vị. 1. Mở trang chi tiết A. 2. Nhập số lượng 6. 3. Nhấn thêm giỏ hàng.	1 Hệ thống thông báo số lượng vượt tồn kho nếu có xác thực tức thời. 2. Hệ thống từ chối số lượng vượt tồn kho.	Không phụ thuộc test case khác; cần sản phẩm A có tồn kho 5 và nhập số lượng 6.	Passed	23/10/2026	
+CART_AddToCart_Duplicate_001	Thêm lại sản phẩm đã có	Tiền điều kiện: Sản phẩm A chưa vượt giới hạn tồn kho. 1. Thêm A vào giỏ hàng một lần. 2. Quay lại trang A. 3. Thêm A lần nữa.	1. A được thêm vào giỏ hàng. 3. Số lượng A tăng theo quy tắc gộp sản phẩm của website.	[CART_AddToCart_Success_001] – Sản phẩm A đã có trong giỏ hàng.	Passed	23/10/2026	
+CART_AddToCart_DifferentProduct_001	Thêm sản phẩm khác vào giỏ	Tiền điều kiện: Sản phẩm A và B còn hàng. 1. Thêm A vào giỏ. 2. Thêm B vào giỏ. 3. Mở giỏ hàng.	1. A xuất hiện trong giỏ hàng. 2. B được thêm thành công. 3. Giỏ hàng chứa cả A và B.	[CART_AddToCart_Success_001] – Sản phẩm A đã có trong giỏ hàng; sản phẩm B còn hàng.	Passed	23/10/2026	
+CART_AddToCart_NoVariant_001	Chưa chọn biến thể sản phẩm	Tiền điều kiện: Sản phẩm A bắt buộc chọn màu sắc. 1. Mở trang chi tiết A. 2. Không chọn màu. 3. Nhấn thêm giỏ hàng.	1. Hệ thống yêu cầu chọn màu và không thêm sản phẩm khi thiếu biến thể bắt buộc.	Không phụ thuộc test case khác. Cần sản phẩm A có biến thể màu sắc bắt buộc chọn.	Passed	23/10/2026	
+CART_AddToCart_VariantSelected_001	Thêm sản phẩm có biến thể	Tiền điều kiện: Sản phẩm A có màu đen còn hàng. 1. Mở trang A. 2. Chọn màu đen. 3. Nhấn thêm giỏ hàng. 4. Mở giỏ hàng.	1. Màu đen được chọn. 2. Hệ thống tiếp nhận yêu cầu thêm sản phẩm. 3. Giỏ hàng hiển thị đúng biến thể màu đen.	Không phụ thuộc test case khác. Cần sản phẩm A có biến thể màu đen còn hàng.	Passed	23/10/2026	
+CART_AddToCart_Guest_001	Thêm sản phẩm khi chưa đăng nhập	Tiền điều kiện: Người dùng chưa đăng nhập; sản phẩm A còn hàng. 1. Mở trang A. 2. Nhấn thêm giỏ hàng.	1. Hệ thống cho thêm vào giỏ khách hoặc yêu cầu đăng nhập theo yêu cầu nghiệp vụ.	Không phụ thuộc test case khác. Người dùng ở trạng thái chưa đăng nhập.	Passed	23/10/2026	
+CART_AddToCart_LoggedIn_001	Thêm sản phẩm khi đã đăng nhập	Tiền điều kiện: Người dùng đã đăng nhập; A còn hàng. 1. Mở trang A. 2. Nhấn thêm giỏ hàng. 3. Mở giỏ hàng.	1. Yêu cầu thêm sản phẩm được xử lý thành công. 2. Giỏ hàng của tài khoản hiện tại hiển thị A.	Phụ thuộc chức năng đăng nhập thành công. Người dùng đã đăng nhập bằng tài khoản khách hàng hợp lệ.	Passed	23/10/2026	
+CART_AddToCart_CartBadge_001	Cập nhật số lượng trên biểu tượng giỏ	Tiền điều kiện: Giỏ hàng ban đầu trống; A còn hàng. 1. Thêm A với số lượng 1. 2. Quan sát biểu tượng giỏ hàng.	1. Bộ đếm giỏ hàng cập nhật theo quy tắc đếm của website.	Giỏ hàng ban đầu trống; sản phẩm A còn hàng. Có thể phụ thuộc [CART_AddToCart_Success_001] nếu dùng kết quả thêm sản phẩm từ test case đó.	Passed	23/10/2026	
+CART_AddToCart_Subtotal_001	Kiểm tra thành tiền sản phẩm	Tiền điều kiện: A có giá 100.000 đồng và còn hàng. 1. Thêm A với số lượng 2. 2. Mở giỏ hàng. 3. Kiểm tra thành tiền của A.	1. A được thêm với số lượng 2. 2. Thành tiền của A là 200.000 đồng, chưa tính phí khác.	Sản phẩm A có giá 100.000đ, còn ít nhất 2 đơn vị. Không phụ thuộc test case khác nếu tự chuẩn bị dữ liệu.	Passed	23/10/2026	
+CART_AddToCart_Refresh_001	Giữ sản phẩm sau khi tải lại	Tiền điều kiện: A đã được thêm vào giỏ hàng. 1. Mở trang giỏ hàng. 2. Nhấn F5.	1. A vẫn xuất hiện với số lượng chính xác nếu hệ thống yêu cầu lưu giỏ hàng qua lần tải lại.	[CART_AddToCart_Success_001] – Sản phẩm A đã được thêm thành công vào giỏ hàng.	Passed	23/10/2026	
+CART_AddToCart_NetworkError_001	Xử lý lỗi mất kết nối	Tiền điều kiện: A còn hàng. 1. Ngắt kết nối mạng trong môi trường kiểm thử. 2. Nhấn thêm giỏ hàng.	1, Hệ thống thông báo không thể hoàn thành thao tác; không hiển thị thông báo thành công giả.	Sản phẩm A còn hàng; có thể mô phỏng mất kết nối mạng trong môi trường kiểm thử. Không phụ thuộc test case khác.	Passed	23/10/2026	
+CART_AddToCart_EmptyQuantity_001	Không nhập số lượng sản phẩm	Tiền điều kiện: Sản phẩm A còn hàng, có ô nhập số lượng.  1: Mở trang chi tiết sản phẩm A. 2: Xóa toàn bộ giá trị trong ô số lượng. 3: Nhấn nút Thêm vào giỏ hàng.	2: Ô số lượng được để trống. 3: Hệ thống từ chối thêm sản phẩm và hiển thị thông báo yêu cầu nhập số lượng hợp lệ.	Không phụ thuộc test case khác; sản phẩm A còn hàng và có ô nhập số lượng.	Passed	23/10/2026	
+CART_AddToCart_DecimalQuantity_001	Không cho thêm số lượng thập phân	Tiền điều kiện: Sản phẩm A còn hàng. 1: Mở trang chi tiết sản phẩm A.  2: Nhập số lượng 1.5. 3: Nhấn Thêm vào giỏ hàng.	1: Hệ thống phát hiện hoặc ngăn số lượng thập phân. 2: Không thêm sản phẩm với số lượng không nguyên.	Không phụ thuộc test case khác; sản phẩm A còn hàng và có ô nhập số lượng.	Passed	23/10/2026	
+CART_AddToCart_MaxQuantity_001	Thêm số lượng tối đa cho phép	Tiền điều kiện: Sản phẩm A còn 20 đơn vị, giới hạn mua tối đa 10 đơn vị/lần. 1: Mở trang chi tiết A. 2: Nhập số lượng 10. 3: Nhấn Thêm vào giỏ hàng.	1: Ô số lượng nhận giá trị 10. 2, Sản phẩm được thêm thành công với số lượng 10.	Không phụ thuộc test case khác; sản phẩm A còn 20 đơn vị và giới hạn mua tối đa là 10 đơn vị/lần.	Passed	23/10/2026	
+CART_AddToCart_VariantOutOfStock_001	Không thêm biến thể hết hàng	Tiền điều kiện: Sản phẩm A có màu đen còn 5 đơn vị và màu trắng hết hàng.  1: Mở trang chi tiết A. 2: Chọn biến thể màu trắng.  3: Nhấn Thêm vào giỏ hàng nếu nút khả dụng.	1: Giao diện thể hiện biến thể màu trắng hết hàng nếu có thiết kế trạng thái tồn kho. 2: Hệ thống không cho phép thêm biến thể màu trắng vào giỏ hàng.	Không phụ thuộc test case khác; sản phẩm A có biến thể màu trắng hết hàng.	Passed	23/10/2026	
+							
+
