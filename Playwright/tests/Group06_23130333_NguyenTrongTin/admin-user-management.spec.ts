@@ -405,7 +405,7 @@ test.describe('USER_MGT - Admin user management', () => {
       await fillValidAddUser(
           page,
           `unique${Date.now()}`,
-          envOr('PW_ADMIN_USER_DUPLICATE_EMAIL', 'admin@gmail.com'),
+          envOr('PW_ADMIN_USER_DUPLICATE_EMAIL', requiredEnv('ADMIN_EMAIL')),
       );
       const checkRequest = page.waitForRequest((request) =>
           request.url().includes('/check-username-email'),
