@@ -162,7 +162,7 @@ test.describe('ADMIN_ORDER - Quản lý đơn hàng', () => {
 
   test('ADMIN_ORDER_CreateAddress_001: Không tạo đơn khi chưa chọn địa chỉ nhận hàng', async ({ page }) => {
     await openCreateOrderForm(page);
-    await selectCustomer(page, '34');
+    await selectCustomer(page, '33');
     await selectPaymentMethod(page, '1');
     await selectProduct(page, '110');
     await page.getByRole('button', { name: 'Tạo đơn và giữ tồn kho' }).click();

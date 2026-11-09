@@ -16,7 +16,6 @@ function requiredEnv(name: string, value: string | undefined): string {
     return value.trim();
 }
 
-
 function appUrl(path: string): string {
     const base = new URL(BASE_URL);
     base.pathname = `${base.pathname.replace(/\/+$/, '')}/`;
