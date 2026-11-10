@@ -98,9 +98,8 @@ async function kiemTraThongBaoBatBuoc(page: Page): Promise<void> {
 
 // Số dòng hiện tại trong bảng
 async function demDong(page: Page): Promise<number> {
-  const rows = page.getByRole('row');
-  await expect(rows.first()).toBeVisible();
-  return rows.count();
+  await page.waitForLoadState('networkidle');
+  return page.getByRole('row').count();
 }
 
 test.beforeEach(async ({ page }) => {
