@@ -1,8 +1,25 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
-const BASE = 'http://localhost:8080';
-const TRANG_BANK = `${BASE}/admin/bank-info`;
-const TRANG_DANG_NHAP = `${BASE}/login`;
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const BASE_URL = requiredEnv('BASE_URL');
+const ADMIN_EMAIL = requiredEnv('ADMIN_EMAIL');
+const ADMIN_PASSWORD = requiredEnv('ADMIN_PASSWORD');
+
+function appUrl(path: string): string {
+  const base = new URL(BASE_URL);
+  base.pathname = `${base.pathname.replace(/\/+$/, '')}/`;
+  return new URL(path.replace(/^\/+/, ''), base).toString();
+}
+
+const TRANG_BANK = appUrl('admin/bank-info');
+const TRANG_DANG_NHAP = appUrl('login');
 
 const TB_THEM = 'Đã thêm tài khoản ngân hàng.';
 const TB_SUA = 'Đã cập nhật tài khoản ngân hàng.';
@@ -128,13 +145,10 @@ async function kiemTraKhongThem(page: Page, soTruoc: number, thongBao?: RegExp):
 test.beforeEach(async ({ page }) => {
   test.setTimeout(60_000);
   clear.length = 0;
-  const email = process.env.ADMIN_EMAIL;
-  const matKhau = process.env.ADMIN_PASSWORD;
-  if (!email || !matKhau) throw new Error('Cần đặt biến môi trường ADMIN_EMAIL và ADMIN_PASSWORD (tài khoản Admin)');
 
   await page.goto(TRANG_DANG_NHAP);
-  await page.locator('form.login input[name="loginInfo"]').fill(email);
-  await page.locator('form.login input[name="password"]').fill(matKhau);
+  await page.locator('form.login input[name="loginInfo"]').fill(ADMIN_EMAIL);
+  await page.locator('form.login input[name="password"]').fill(ADMIN_PASSWORD);
   await page.locator('form.login input[type="submit"][name="submit"]').click();
 
   await page.goto(TRANG_BANK);
