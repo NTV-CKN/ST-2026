@@ -2165,3 +2165,34 @@ VALUES
 (10, '<script>alert("XSS_Test")</script>', 'Playwright address XSS Test', '0929999999', '1929999999', NULL, NULL, NULL, 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1),
 -- 7. Test link MXH ([ADM_SHOP_SEC-01])
 (11, 'Chi Nhánh Đà Nẵng', '50 Nguyễn Văn Linh, Đà Nẵng', '0908888888', '19008888', 'danang@pkcn.com', 'https://facebook.com/pkcn.danang', 'https://instagram.com/pkcn.danang', 'https://phukiencongnghe.com.vn/wp-content/uploads/2025/06/PhuKienCongNghe_logo-300x199.png.webp', 1);
+
+-- ============================================================
+-- BỔ SUNG ĐƠN HÀNG CHO SẢN PHẨM 3 / BIẾN THỂ 5 (NF-2100, giá 1.000.000đ)
+-- 3 đơn: completed (2 cái), shipping (1 cái), pending (3 cái).
+-- Công thức tổng tiền khớp các đơn cũ: total_must_pay = tổng order_details + phí ship - giảm giá.
+-- Không đổi tồn kho biến thể 5 (Wishlist Move-1 cần stock = 10).
+-- Lưu ý: order_details.product_variant_id có FK ON DELETE RESTRICT nên sau khi có
+-- đơn, không xóa được biến thể 5 / sản phẩm 3 (xóa sản phẩm sẽ bị chặn).
+-- (chưa chạy trên MySQL thật; đã kiểm tra tĩnh)
+-- ============================================================
+
+INSERT INTO `address_order` (`id`, `phone_number`, `address_detail`, `province_city`, `district`, `receiver_name`, `note`) VALUES
+(31, '0353334530', 'măng đen', 'Đắk Lắk', '', 'Ten', ''),
+(32, '0353334530', 'măng đen', 'Đắk Lắk', '', 'Ten', ''),
+(33, '0793189034', 'sax', 'Bắc Ninh', '', 'vũ', '');
+
+INSERT INTO `orders` (`id`, `user_id`, `payment_method_snapshot`, `address_order_id`, `status_order`,
+    `total_must_pay`, `order_date`, `delivery_date`, `shipping_fee`, `voucher_id`,
+    `voucher_code_snapshot`, `discount_amount`, `note`, `signature`, `user_key_id`, `expire_sign_key`) VALUES
+(30, 33, 'Thanh toán khi nhận hàng', 31, 'completed', 2035000.00, '2026-11-02 09:15:00', '2026-11-05 09:15:00',
+    35000.00, NULL, NULL, 0.00, '', NULL, NULL, '2026-11-04 09:15:00'),
+(31, 33, 'Thanh toán ngân hàng', 32, 'shipping', 1035000.00, '2026-11-05 14:30:00', '2026-11-08 14:30:00',
+    35000.00, NULL, NULL, 0.00, '', NULL, NULL, '2026-11-07 14:30:00'),
+(32, 32, 'Thanh toán khi nhận hàng', 33, 'pending', 3050000.00, '2026-11-08 10:00:00', '2026-11-11 10:00:00',
+    50000.00, NULL, NULL, 0.00, '', NULL, NULL, '2026-11-10 10:00:00');
+
+INSERT INTO `order_details` (`id`, `order_id`, `product_variant_id`, `product_name_snapshot`, `variant_name_snapshot`,
+    `sku_snapshot`, `variant_price_snapshot`, `gram_snapshot`, `color_snapshot`, `size_snapshot`, `quantity`, `price_total`) VALUES
+(397, 30, 5, 'Máy đo khoảng cách qua tia laser', 'Máy đo khoảng cách qua tia laser NF- 2100 100m', 'NF-2100', 1000000.00, 1000, 'Đen Đỏ', '20x40cm', 2, 2000000.00),
+(398, 31, 5, 'Máy đo khoảng cách qua tia laser', 'Máy đo khoảng cách qua tia laser NF- 2100 100m', 'NF-2100', 1000000.00, 1000, 'Đen Đỏ', '20x40cm', 1, 1000000.00),
+(399, 32, 5, 'Máy đo khoảng cách qua tia laser', 'Máy đo khoảng cách qua tia laser NF- 2100 100m', 'NF-2100', 1000000.00, 1000, 'Đen Đỏ', '20x40cm', 3, 3000000.00);
